@@ -1,150 +1,202 @@
-package com.its.user.service;
+package com.its.project.repository;
 
 import java.util.List;
 
-import com.its.user.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserService {
+import com.its.project.model.Project;
 
-    User registerUser(User user);
+public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-    User login(String email, String password);
-
-    User getUserById(Long id);
-
-    List<User> getAllUsers();
+    List<Project> findByProductOwnerId(Long productOwnerId);
 }
 
-package com.its.user.service;
+package com.its.project.service;
+
+import java.util.List;
+
+import com.its.project.model.Project;
+
+public interface ProjectService {
+
+    Project createProject(Project project);
+
+    List<Project> getAllProjects();
+
+    Project getProjectById(Long projectId);
+
+    Project updateProject(Long projectId, Project project);
+
+    void deleteProject(Long projectId);
+
+    List<Project> getProjectsByOwner(Long ownerId);
+}
+
+
+package com.its.project.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.its.user.exception.InvalidCredentialsException;
-import com.its.user.exception.UserNotFoundException;
-import com.its.user.model.User;
-import com.its.user.repository.UserRepository;
+import com.its.project.exception.ProjectNotFoundException;
+import com.its.project.model.Project;
+import com.its.project.repository.ProjectRepository;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class ProjectServiceImpl implements ProjectService {
 
-    private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public ProjectServiceImpl(ProjectRepository projectRepository) {
+        this.projectRepository = projectRepository;
     }
 
     @Override
-    public User registerUser(User user) {
-        return userRepository.save(user);
+    public Project createProject(Project project) {
+        return projectRepository.save(project);
     }
 
     @Override
-    public User login(String email, String password) {
-
-        User user = userRepository.findByEmail(email);
-
-        if (user == null || !user.getPassword().equals(password)) {
-            throw new InvalidCredentialsException("Invalid email or password");
-        }
-
-        return user;
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
     }
 
     @Override
-    public User getUserById(Long id) {
+    public Project getProjectById(Long projectId) {
 
-        return userRepository.findById(id)
+        return projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                    new UserNotFoundException(
-                        "User not found with id: " + id
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
                     )
                 );
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Project updateProject(Long projectId, Project project) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        existingProject.setProjectName(project.getProjectName());
+        existingProject.setProductOwnerId(project.getProductOwnerId());
+        existingProject.setStartDate(project.getStartDate());
+        existingProject.setEndDate(project.getEndDate());
+
+        return projectRepository.save(existingProject);
+    }
+
+    @Override
+    public void deleteProject(Long projectId) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        projectRepository.delete(existingProject);
+    }
+
+    @Override
+    public List<Project> getProjectsByOwner(Long ownerId) {
+        return projectRepository.findByProductOwnerId(ownerId);
     }
 }
 
-
-package com.its.user.controller;
+package com.its.project.controller;
 
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.its.user.model.User;
-import com.its.user.service.UserService;
+import com.its.project.model.Project;
+import com.its.project.service.ProjectService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/users")
-public class UserController {
+@RequestMapping("/api/projects")
+public class ProjectController {
 
-    private final UserService userService;
+    private final ProjectService projectService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<List<Project>> getAllProjects() {
 
         return new ResponseEntity<>(
-                users,
+                projectService.getAllProjects(),
                 HttpStatus.OK
         );
     }
 
     @PostMapping
-    public ResponseEntity<User> registerUser(
-            @Valid @RequestBody User user) {
-
-        User savedUser = userService.registerUser(user);
+    public ResponseEntity<Project> createProject(
+            @Valid @RequestBody Project project) {
 
         return new ResponseEntity<>(
-                savedUser,
+                projectService.createProject(project),
                 HttpStatus.CREATED
         );
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<User> login(
-            @RequestBody User user) {
-
-        User loggedInUser =
-                userService.login(
-                        user.getEmail(),
-                        user.getPassword()
-                );
+    @GetMapping("/{projectId}")
+    public ResponseEntity<Project> getProjectById(
+            @PathVariable Long projectId) {
 
         return new ResponseEntity<>(
-                loggedInUser,
+                projectService.getProjectById(projectId),
                 HttpStatus.OK
         );
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(
-            @PathVariable Long userId) {
-
-        User user = userService.getUserById(userId);
+    @PutMapping("/{projectId}")
+    public ResponseEntity<Project> updateProject(
+            @PathVariable Long projectId,
+            @Valid @RequestBody Project project) {
 
         return new ResponseEntity<>(
-                user,
+                projectService.updateProject(projectId, project),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<Void> deleteProject(
+            @PathVariable Long projectId) {
+
+        projectService.deleteProject(projectId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Project>> getProjectsByOwner(
+            @PathVariable Long ownerId) {
+
+        return new ResponseEntity<>(
+                projectService.getProjectsByOwner(ownerId),
                 HttpStatus.OK
         );
     }
