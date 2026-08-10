@@ -1,93 +1,155 @@
-package com.its.issue.service;
+package com.its.issue.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.its.issue.model.Issue;
-import com.its.issue.repository.IssueRepository;
+import com.its.issue.service.IssueService;
 
-@Service
-public class IssueServiceImpl implements IssueService {
+import jakarta.validation.Valid;
 
-    private final IssueRepository issueRepository;
+@RestController
+@RequestMapping("/api/issues")
+public class IssueController {
 
-    public IssueServiceImpl(IssueRepository issueRepository) {
-        this.issueRepository = issueRepository;
+    private final IssueService issueService;
+
+    public IssueController(IssueService issueService) {
+        this.issueService = issueService;
     }
 
-    @Override
-    public Issue createIssue(Issue issue) {
+    @PostMapping
+    public ResponseEntity<Issue> createIssue(
+            @Valid @RequestBody Issue issue) {
 
-        issue.setCreatedDate(LocalDateTime.now());
-        issue.setLastUpdatedDate(LocalDateTime.now());
+        Issue savedIssue = issueService.createIssue(issue);
 
-        return issueRepository.save(issue);
+        return new ResponseEntity<>(
+                savedIssue,
+                HttpStatus.CREATED
+        );
     }
 
-    @Override
-    public List<Issue> getAllIssues() {
-        return issueRepository.findAll();
+    @GetMapping
+    public ResponseEntity<List<Issue>> getAllIssues() {
+
+        List<Issue> issues = issueService.getAllIssues();
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public Issue getIssueById(Long issueId) {
-        return issueRepository.findById(issueId).orElse(null);
+    @GetMapping("/{issueId}")
+    public ResponseEntity<Issue> getIssueById(
+            @PathVariable Long issueId) {
+
+        Issue issue = issueService.getIssueById(issueId);
+
+        return new ResponseEntity<>(
+                issue,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public Issue updateIssue(Long issueId, Issue issue) {
+    @PutMapping("/{issueId}")
+    public ResponseEntity<Issue> updateIssue(
+            @PathVariable Long issueId,
+            @Valid @RequestBody Issue issue) {
 
-        Issue existingIssue = issueRepository.findById(issueId)
-                .orElse(null);
+        Issue updatedIssue =
+                issueService.updateIssue(issueId, issue);
 
-        if (existingIssue == null) {
-            return null;
-        }
-
-        existingIssue.setSummary(issue.getSummary());
-        existingIssue.setDescription(issue.getDescription());
-        existingIssue.setPriority(issue.getPriority());
-        existingIssue.setAssigneeId(issue.getAssigneeId());
-        existingIssue.setStatus(issue.getStatus());
-        existingIssue.setProjectId(issue.getProjectId());
-        existingIssue.setSprint(issue.getSprint());
-        existingIssue.setStoryPoint(issue.getStoryPoint());
-        existingIssue.setTags(issue.getTags());
-        existingIssue.setType(issue.getType());
-        existingIssue.setLastUpdatedDate(LocalDateTime.now());
-
-        return issueRepository.save(existingIssue);
+        return new ResponseEntity<>(
+                updatedIssue,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public void deleteIssue(Long issueId) {
-        issueRepository.deleteById(issueId);
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<Void> deleteIssue(
+            @PathVariable Long issueId) {
+
+        issueService.deleteIssue(issueId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
     }
 
-    @Override
-    public List<Issue> getIssuesByProject(Long projectId) {
-        return issueRepository.findByProjectId(projectId);
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<Issue>> getIssuesByProject(
+            @PathVariable Long projectId) {
+
+        List<Issue> issues =
+                issueService.getIssuesByProject(projectId);
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public List<Issue> getIssuesByAssignee(Long assigneeId) {
-        return issueRepository.findByAssigneeId(assigneeId);
+    @GetMapping("/assignee/{assigneeId}")
+    public ResponseEntity<List<Issue>> getIssuesByAssignee(
+            @PathVariable Long assigneeId) {
+
+        List<Issue> issues =
+                issueService.getIssuesByAssignee(assigneeId);
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public List<Issue> getIssuesByStatus(String status) {
-        return issueRepository.findByStatus(status);
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Issue>> getIssuesByStatus(
+            @PathVariable String status) {
+
+        List<Issue> issues =
+                issueService.getIssuesByStatus(status);
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public List<Issue> getIssuesByPriority(String priority) {
-        return issueRepository.findByPriority(priority);
+    @GetMapping("/priority/{priority}")
+    public ResponseEntity<List<Issue>> getIssuesByPriority(
+            @PathVariable String priority) {
+
+        List<Issue> issues =
+                issueService.getIssuesByPriority(priority);
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public List<Issue> getIssuesByType(String type) {
-        return issueRepository.findByType(type);
+    @GetMapping("/type/{type}")
+    public ResponseEntity<List<Issue>> getIssuesByType(
+            @PathVariable String type) {
+
+        List<Issue> issues =
+                issueService.getIssuesByType(type);
+
+        return new ResponseEntity<>(
+                issues,
+                HttpStatus.OK
+        );
     }
 }
