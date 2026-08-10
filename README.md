@@ -1,63 +1,63 @@
-package com.its.project.repository;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.its.project.model.Project;
-
-public interface ProjectRepository extends JpaRepository<Project, Long> {
-
-}
-
-
-package com.its.project.service;
+package com.its.project.controller;
 
 import java.util.List;
 
-import com.its.project.model.Project;
-
-public interface ProjectService {
-
-    Project createProject(Project project);
-
-    List<Project> getAllProjects();
-
-    Project getProjectById(Long id);
-}
-
-
-package com.its.project.service;
-
-import java.util.List;
-
-import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.its.project.model.Project;
-import com.its.project.repository.ProjectRepository;
+import com.its.project.service.ProjectService;
 
-@Service
-public class ProjectServiceImpl implements ProjectService {
+import jakarta.validation.Valid;
 
-    private final ProjectRepository projectRepository;
+@RestController
+@RequestMapping("/api/projects")
+public class ProjectController {
 
-    public ProjectServiceImpl(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
+    private final ProjectService projectService;
+
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
-    @Override
-    public Project createProject(Project project) {
-        return projectRepository.save(project);
+    @PostMapping
+    public ResponseEntity<Project> createProject(
+            @Valid @RequestBody Project project) {
+
+        Project savedProject = projectService.createProject(project);
+
+        return new ResponseEntity<>(
+                savedProject,
+                HttpStatus.CREATED
+        );
     }
 
-    @Override
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    @GetMapping
+    public ResponseEntity<List<Project>> getAllProjects() {
+
+        List<Project> projects = projectService.getAllProjects();
+
+        return new ResponseEntity<>(
+                projects,
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public Project getProjectById(Long id) {
-        return projectRepository.findById(id).orElse(null);
+    @GetMapping("/{id}")
+    public ResponseEntity<Project> getProjectById(
+            @PathVariable Long id) {
+
+        Project project = projectService.getProjectById(id);
+
+        return new ResponseEntity<>(
+                project,
+                HttpStatus.OK
+        );
     }
 }
-
-
-
