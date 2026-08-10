@@ -1,157 +1,52 @@
-package com.its.issue.model;
+package com.its.issue.repository;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Entity
-@Table(name = "issues")
-public class Issue {
+import com.its.issue.model.Issue;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public interface IssueRepository extends JpaRepository<Issue, Long> {
 
-    @NotBlank(message = "Summary is required")
-    private String summary;
+    List<Issue> findByProjectId(Long projectId);
 
-    private String description;
+    List<Issue> findByAssigneeId(Long assigneeId);
 
-    @NotBlank(message = "Priority is required")
-    private String priority;
+    List<Issue> findByStatus(String status);
 
-    @NotNull(message = "Assignee ID is required")
-    private Long assigneeId;
+    List<Issue> findByPriority(String priority);
 
-    @NotBlank(message = "Status is required")
-    private String status;
-
-    private LocalDateTime createdDate;
-
-    private LocalDateTime lastUpdatedDate;
-
-    @NotNull(message = "Project ID is required")
-    private Long projectId;
-
-    private String sprint;
-
-    private Integer storyPoint;
-
-    private String tags;
-
-    @NotBlank(message = "Type is required")
-    private String type;
-
-    public Issue() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getSummary() {
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
-
-    public Long getAssigneeId() {
-        return assigneeId;
-    }
-
-    public void setAssigneeId(Long assigneeId) {
-        this.assigneeId = assigneeId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public LocalDateTime getLastUpdatedDate() {
-        return lastUpdatedDate;
-    }
-
-    public void setLastUpdatedDate(LocalDateTime lastUpdatedDate) {
-        this.lastUpdatedDate = lastUpdatedDate;
-    }
-
-    public Long getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(Long projectId) {
-        this.projectId = projectId;
-    }
-
-    public String getSprint() {
-        return sprint;
-    }
-
-    public void setSprint(String sprint) {
-        this.sprint = sprint;
-    }
-
-    public Integer getStoryPoint() {
-        return storyPoint;
-    }
-
-    public void setStoryPoint(Integer storyPoint) {
-        this.storyPoint = storyPoint;
-    }
-
-    public String getTags() {
-        return tags;
-    }
-
-    public void setTags(String tags) {
-        this.tags = tags;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
+    List<Issue> findByType(String type);
 }
+
+
+package com.its.issue.service;
+
+import java.util.List;
+
+import com.its.issue.model.Issue;
+
+public interface IssueService {
+
+    Issue createIssue(Issue issue);
+
+    List<Issue> getAllIssues();
+
+    Issue getIssueById(Long issueId);
+
+    Issue updateIssue(Long issueId, Issue issue);
+
+    void deleteIssue(Long issueId);
+
+    List<Issue> getIssuesByProject(Long projectId);
+
+    List<Issue> getIssuesByAssignee(Long assigneeId);
+
+    List<Issue> getIssuesByStatus(String status);
+
+    List<Issue> getIssuesByPriority(String priority);
+
+    List<Issue> getIssuesByType(String type);
+}
+
+
