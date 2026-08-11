@@ -1,16 +1,31 @@
-package com.its.user.client;
+package com.its.user.service;
 
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import com.its.user.model.User;
 
-@FeignClient(name = "issue-service")
-public interface IssueClient {
+public interface UserService {
 
-    @GetMapping("/api/issues/assignee/{assigneeId}")
-    List<Map<String, Object>> getIssuesByAssignee(
-            @PathVariable("assigneeId") Long assigneeId);
+    User registerUser(User user);
+
+    User login(String email, String password);
+
+    User getUserById(Long id);
+
+    List<User> getAllUsers();
+}
+
+package com.its.user;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+public class UserServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(UserServiceApplication.class, args);
+    }
 }
