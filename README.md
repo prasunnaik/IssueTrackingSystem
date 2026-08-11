@@ -1,6 +1,182 @@
+package com.its.project.client;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "issue-service")
+public interface IssueClient {
+
+    @GetMapping("/api/issues/project/{projectId}")
+    List<Map<String, Object>> getIssuesByProject(
+            @PathVariable("projectId") Long projectId);
+}
+
+
+package com.its.project.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.its.project.model.Project;
+
+public interface ProjectRepository extends JpaRepository<Project, Long> {
+
+    List<Project> findByProductOwnerId(Long ownerId);
+
+    Project findByProjectName(String projectName);
+}
+
+
+
+package com.its.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.its.project.model.Project;
+
+public interface ProjectService {
+
+    Project createProject(Project project);
+
+    List<Project> getAllProjects();
+
+    Project getProjectById(Long projectId);
+
+    Project updateProject(Long projectId, Project project);
+
+    void deleteProject(Long projectId);
+
+    List<Project> getProjectsByOwner(Long ownerId);
+
+    List<Map<String, Object>> getIssuesByProjectId(Long projectId);
+
+    List<Map<String, Object>> getIssuesByProjectName(String projectName);
+}
+
+
+
+package com.its.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.its.project.client.IssueClient;
+import com.its.project.exception.ProjectNotFoundException;
+import com.its.project.model.Project;
+import com.its.project.repository.ProjectRepository;
+
+@Service
+public class ProjectServiceImpl implements ProjectService {
+
+    private final ProjectRepository projectRepository;
+    private final IssueClient issueClient;
+
+    public ProjectServiceImpl(
+            ProjectRepository projectRepository,
+            IssueClient issueClient) {
+
+        this.projectRepository = projectRepository;
+        this.issueClient = issueClient;
+    }
+
+    @Override
+    public Project createProject(Project project) {
+        return projectRepository.save(project);
+    }
+
+    @Override
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
+
+    @Override
+    public Project getProjectById(Long projectId) {
+
+        return projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+    }
+
+    @Override
+    public Project updateProject(Long projectId, Project project) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        existingProject.setProjectName(project.getProjectName());
+        existingProject.setProductOwnerId(project.getProductOwnerId());
+        existingProject.setStartDate(project.getStartDate());
+        existingProject.setEndDate(project.getEndDate());
+
+        return projectRepository.save(existingProject);
+    }
+
+    @Override
+    public void deleteProject(Long projectId) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        projectRepository.delete(existingProject);
+    }
+
+    @Override
+    public List<Project> getProjectsByOwner(Long ownerId) {
+        return projectRepository.findByProductOwnerId(ownerId);
+    }
+
+    // Inter-service communication using project ID
+    @Override
+    public List<Map<String, Object>> getIssuesByProjectId(Long projectId) {
+
+        // Verify project exists first
+        getProjectById(projectId);
+
+        return issueClient.getIssuesByProject(projectId);
+    }
+
+    // Inter-service communication using project name
+    @Override
+    public List<Map<String, Object>> getIssuesByProjectName(
+            String projectName) {
+
+        Project project = projectRepository.findByProjectName(projectName);
+
+        if (project == null) {
+            throw new ProjectNotFoundException(
+                "Project not found with name: " + projectName
+            );
+        }
+
+        return issueClient.getIssuesByProject(project.getId());
+    }
+}
+
+
+
 package com.its.project.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,103 +264,27 @@ public class ProjectController {
                 HttpStatus.OK
         );
     }
-}
 
-package com.its.project.service;
+    // Inter-service communication by project ID
+    @GetMapping("/{projectId}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getIssuesByProjectId(
+            @PathVariable Long projectId) {
 
-import java.util.List;
-
-import com.its.project.model.Project;
-
-public interface ProjectService {
-
-    Project createProject(Project project);
-
-    List<Project> getAllProjects();
-
-    Project getProjectById(Long projectId);
-
-    Project updateProject(Long projectId, Project project);
-
-    void deleteProject(Long projectId);
-
-    List<Project> getProjectsByOwner(Long ownerId);
-}
-
-
-package com.its.project.service;
-
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
-import com.its.project.exception.ProjectNotFoundException;
-import com.its.project.model.Project;
-import com.its.project.repository.ProjectRepository;
-
-@Service
-public class ProjectServiceImpl implements ProjectService {
-
-    private final ProjectRepository projectRepository;
-
-    public ProjectServiceImpl(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
+        return new ResponseEntity<>(
+                projectService.getIssuesByProjectId(projectId),
+                HttpStatus.OK
+        );
     }
 
-    @Override
-    public Project createProject(Project project) {
-        return projectRepository.save(project);
-    }
+    // Inter-service communication by project name
+    @GetMapping("/projectName/{projectName}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getIssuesByProjectName(
+            @PathVariable String projectName) {
 
-    @Override
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
-    }
-
-    @Override
-    public Project getProjectById(Long projectId) {
-
-        return projectRepository.findById(projectId)
-                .orElseThrow(() ->
-                    new ProjectNotFoundException(
-                        "Project not found with id: " + projectId
-                    )
-                );
-    }
-
-    @Override
-    public Project updateProject(Long projectId, Project project) {
-
-        Project existingProject = projectRepository.findById(projectId)
-                .orElseThrow(() ->
-                    new ProjectNotFoundException(
-                        "Project not found with id: " + projectId
-                    )
-                );
-
-        existingProject.setProjectName(project.getProjectName());
-        existingProject.setProductOwnerId(project.getProductOwnerId());
-        existingProject.setStartDate(project.getStartDate());
-        existingProject.setEndDate(project.getEndDate());
-
-        return projectRepository.save(existingProject);
-    }
-
-    @Override
-    public void deleteProject(Long projectId) {
-
-        Project existingProject = projectRepository.findById(projectId)
-                .orElseThrow(() ->
-                    new ProjectNotFoundException(
-                        "Project not found with id: " + projectId
-                    )
-                );
-
-        projectRepository.delete(existingProject);
-    }
-
-    @Override
-    public List<Project> getProjectsByOwner(Long ownerId) {
-        return projectRepository.findByProductOwnerId(ownerId);
+        return new ResponseEntity<>(
+                projectService.getIssuesByProjectName(projectName),
+                HttpStatus.OK
+        );
     }
 }
+
