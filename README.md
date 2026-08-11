@@ -1,56 +1,41 @@
-package com.its.issue.exception;
+package com.its.issue.repository;
 
-public class IssueNotFoundException extends RuntimeException {
+import java.util.List;
 
-    public IssueNotFoundException(String message) {
-        super(message);
-    }
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.its.issue.model.Issue;
+
+public interface IssueRepository extends JpaRepository<Issue, Long> {
+
+    List<Issue> findByProjectId(Long projectId);
+
+    List<Issue> findByAssigneeId(Long assigneeId);
 }
 
-package com.its.issue.exception;
+package com.its.issue.service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.its.issue.model.Issue;
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+public interface IssueService {
 
-    @ExceptionHandler(IssueNotFoundException.class)
-    public ResponseEntity<String> handleIssueNotFound(
-            IssueNotFoundException exception) {
+    Issue createIssue(Issue issue);
 
-        return new ResponseEntity<>(
-                exception.getMessage(),
-                HttpStatus.NOT_FOUND
-        );
-    }
+    List<Issue> getAllIssues();
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationErrors(
-            MethodArgumentNotValidException exception) {
+    Issue getIssueById(Long issueId);
 
-        Map<String, String> errors = new HashMap<>();
+    Issue updateIssue(Long issueId, Issue issue);
 
-        exception.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-                        errors.put(
-                                error.getField(),
-                                error.getDefaultMessage()
-                        )
-                );
+    void deleteIssue(Long issueId);
 
-        return new ResponseEntity<>(
-                errors,
-                HttpStatus.BAD_REQUEST
-        );
-    }
+    List<Issue> getIssuesByProject(Long projectId);
+
+    List<Issue> getIssuesByOwner(Long ownerId);
+
+    List<Issue> getIssuesByAssignee(Long assigneeId);
 }
 
 
@@ -85,6 +70,7 @@ public class IssueServiceImpl implements IssueService {
 
     @Override
     public List<Issue> getAllIssues() {
+
         return issueRepository.findAll();
     }
 
@@ -93,9 +79,9 @@ public class IssueServiceImpl implements IssueService {
 
         return issueRepository.findById(issueId)
                 .orElseThrow(() ->
-                        new IssueNotFoundException(
-                                "Issue not found with id: " + issueId
-                        )
+                    new IssueNotFoundException(
+                        "Issue not found with id: " + issueId
+                    )
                 );
     }
 
@@ -104,9 +90,9 @@ public class IssueServiceImpl implements IssueService {
 
         Issue existingIssue = issueRepository.findById(issueId)
                 .orElseThrow(() ->
-                        new IssueNotFoundException(
-                                "Issue not found with id: " + issueId
-                        )
+                    new IssueNotFoundException(
+                        "Issue not found with id: " + issueId
+                    )
                 );
 
         existingIssue.setSummary(issue.getSummary());
@@ -119,6 +105,7 @@ public class IssueServiceImpl implements IssueService {
         existingIssue.setStoryPoint(issue.getStoryPoint());
         existingIssue.setTags(issue.getTags());
         existingIssue.setType(issue.getType());
+
         existingIssue.setLastUpdatedDate(LocalDateTime.now());
 
         return issueRepository.save(existingIssue);
@@ -129,9 +116,9 @@ public class IssueServiceImpl implements IssueService {
 
         Issue existingIssue = issueRepository.findById(issueId)
                 .orElseThrow(() ->
-                        new IssueNotFoundException(
-                                "Issue not found with id: " + issueId
-                        )
+                    new IssueNotFoundException(
+                        "Issue not found with id: " + issueId
+                    )
                 );
 
         issueRepository.delete(existingIssue);
@@ -139,28 +126,146 @@ public class IssueServiceImpl implements IssueService {
 
     @Override
     public List<Issue> getIssuesByProject(Long projectId) {
+
         return issueRepository.findByProjectId(projectId);
     }
 
     @Override
+    public List<Issue> getIssuesByOwner(Long ownerId) {
+
+        /*
+         * Owner-based issue retrieval requires
+         * inter-service communication with Project Service.
+         *
+         * This will be implemented in the
+         * Inter-Service Communication milestone.
+         */
+
+        throw new UnsupportedOperationException(
+            "Owner based issue retrieval will be implemented using inter-service communication"
+        );
+    }
+
+    @Override
     public List<Issue> getIssuesByAssignee(Long assigneeId) {
+
         return issueRepository.findByAssigneeId(assigneeId);
-    }
-
-    @Override
-    public List<Issue> getIssuesByStatus(String status) {
-        return issueRepository.findByStatus(status);
-    }
-
-    @Override
-    public List<Issue> getIssuesByPriority(String priority) {
-        return issueRepository.findByPriority(priority);
-    }
-
-    @Override
-    public List<Issue> getIssuesByType(String type) {
-        return issueRepository.findByType(type);
     }
 }
 
+
+
+package com.its.issue.controller;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.its.issue.model.Issue;
+import com.its.issue.service.IssueService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/issues")
+public class IssueController {
+
+    private final IssueService issueService;
+
+    public IssueController(IssueService issueService) {
+        this.issueService = issueService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Issue> createIssue(
+            @Valid @RequestBody Issue issue) {
+
+        Issue savedIssue = issueService.createIssue(issue);
+
+        return new ResponseEntity<>(
+                savedIssue,
+                HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Issue>> getAllIssues() {
+
+        return new ResponseEntity<>(
+                issueService.getAllIssues(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/{issueId}")
+    public ResponseEntity<Issue> getIssueById(
+            @PathVariable Long issueId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssueById(issueId),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{issueId}")
+    public ResponseEntity<Issue> updateIssue(
+            @PathVariable Long issueId,
+            @Valid @RequestBody Issue issue) {
+
+        return new ResponseEntity<>(
+                issueService.updateIssue(issueId, issue),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<Void> deleteIssue(
+            @PathVariable Long issueId) {
+
+        issueService.deleteIssue(issueId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
+    }
+
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<Issue>> getIssuesByProject(
+            @PathVariable Long projectId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByProject(projectId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Issue>> getIssuesByOwner(
+            @PathVariable Long ownerId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByOwner(ownerId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/assignee/{assigneeId}")
+    public ResponseEntity<List<Issue>> getIssuesByAssignee(
+            @PathVariable Long assigneeId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByAssignee(assigneeId),
+                HttpStatus.OK
+        );
+    }
+}
 
