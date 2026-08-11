@@ -1,3 +1,107 @@
+package com.its.user.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.its.user.model.User;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    User findByEmail(String email);
+
+    User findByName(String name);
+}
+
+
+package com.its.user.service;
+
+import java.util.List;
+
+import com.its.user.model.User;
+
+public interface UserService {
+
+    User registerUser(User user);
+
+    User login(String email, String password);
+
+    User getUserById(Long id);
+
+    User getUserByName(String name);
+
+    List<User> getAllUsers();
+}
+
+
+package com.its.user.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.its.user.exception.InvalidCredentialsException;
+import com.its.user.exception.UserNotFoundException;
+import com.its.user.model.User;
+import com.its.user.repository.UserRepository;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public User registerUser(User user) {
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User login(String email, String password) {
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null || !user.getPassword().equals(password)) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        return user;
+    }
+
+    @Override
+    public User getUserById(Long id) {
+
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                    new UserNotFoundException(
+                        "User not found with id: " + id
+                    )
+                );
+    }
+
+    @Override
+    public User getUserByName(String name) {
+
+        User user = userRepository.findByName(name);
+
+        if (user == null) {
+            throw new UserNotFoundException(
+                "User not found with name: " + name
+            );
+        }
+
+        return user;
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+}
+
+
+
 package com.its.user.controller;
 
 import java.util.List;
@@ -52,7 +156,7 @@ public class UserController {
         return userService.getUserById(userId);
     }
 
-    // Get issues assigned to a user
+    // Get issues assigned to a user by user ID
     // Inter-service communication: User Service -> Issue Service
     @GetMapping("/{userId}/issues")
     public List<Map<String, Object>> getUserIssues(
@@ -60,87 +164,16 @@ public class UserController {
 
         return issueClient.getIssuesByAssignee(userId);
     }
-}
 
-package com.its.user.service;
+    // Get issues assigned to a user by username
+    // Here username is the existing User.name field
+    // Inter-service communication: User Service -> Issue Service
+    @GetMapping("/username/{username}/issues")
+    public List<Map<String, Object>> getUserIssuesByUsername(
+            @PathVariable String username) {
 
-import java.util.List;
+        User user = userService.getUserByName(username);
 
-import com.its.user.model.User;
-
-public interface UserService {
-
-    User registerUser(User user);
-
-    User login(String email, String password);
-
-    User getUserById(Long id);
-
-    List<User> getAllUsers();
-}
-
-package com.its.user.service;
-
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
-import com.its.user.exception.InvalidCredentialsException;
-import com.its.user.exception.UserNotFoundException;
-import com.its.user.model.User;
-import com.its.user.repository.UserRepository;
-
-@Service
-public class UserServiceImpl implements UserService {
-
-    private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+        return issueClient.getIssuesByAssignee(user.getId());
     }
-
-    @Override
-    public User registerUser(User user) {
-        return userRepository.save(user);
-    }
-
-    @Override
-    public User login(String email, String password) {
-
-        User user = userRepository.findByEmail(email);
-
-        if (user == null || !user.getPassword().equals(password)) {
-            throw new InvalidCredentialsException("Invalid email or password");
-        }
-
-        return user;
-    }
-
-    @Override
-    public User getUserById(Long id) {
-
-        return userRepository.findById(id)
-                .orElseThrow(() ->
-                    new UserNotFoundException(
-                        "User not found with id: " + id
-                    )
-                );
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-}
-
-
-package com.its.user.repository;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.its.user.model.User;
-
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    User findByEmail(String email);
 }
