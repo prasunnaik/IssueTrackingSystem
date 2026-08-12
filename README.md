@@ -1,89 +1,189 @@
+package com.its.user.controller;
 
-java.net.UnknownHostException: Failed to resolve 'UI-5CG44846VT.us.deloitte.com' [A(1), AAAA(28)] after 4 queries 
-	at io.netty.resolver.dns.DnsResolveContext.finishResolve(DnsResolveContext.java:1139) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-	Suppressed: The stacktrace has been enhanced by Reactor, refer to additional information below: 
-Error has been observed at the following site(s):
-	*__checkpoint ⇢ org.springframework.cloud.gateway.filter.WeightCalculatorWebFilter@5d1d9d73
-	*__checkpoint ⇢ HTTP GET "/api/users" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-		at io.netty.resolver.dns.DnsResolveContext.finishResolve(DnsResolveContext.java:1139) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.tryToFinishResolve(DnsResolveContext.java:1086) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.query(DnsResolveContext.java:443) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.onResponse(DnsResolveContext.java:668) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.lambda$query$0(DnsResolveContext.java:499) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListener0(DefaultPromise.java:604) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListeners0(DefaultPromise.java:597) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListenersNow(DefaultPromise.java:573) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListeners(DefaultPromise.java:506) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.setValue0(DefaultPromise.java:650) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.setSuccess0(DefaultPromise.java:639) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.trySuccess(DefaultPromise.java:119) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsQueryContext.trySuccess(DnsQueryContext.java:304) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsQueryContext.finishSuccess(DnsQueryContext.java:295) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsNameResolver$DnsResponseHandler.channelRead(DnsNameResolver.java:1558) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107) ~[netty-codec-base-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.AbstractNioMessageChannel$NioMessageUnsafe.read(AbstractNioMessageChannel.java:100) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
-Caused by: io.netty.resolver.dns.DnsErrorCauseException: Query failed with NXDOMAIN
-	at io.netty.resolver.dns.DnsResolveContext.onResponse(..)(Unknown Source) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
+import java.util.List;
+import java.util.Map;
 
-[2m2026-08-11T21:25:42.000+05:30[0;39m [31mERROR[0;39m [35m4752[0;39m [2m--- [api-gateway] [ctor-http-nio-2] [0;39m[36mb.w.a.e.AbstractErrorWebExceptionHandler[0;39m [2m:[0;39m [e3644de3-2]  500 Server Error for HTTP GET "/api/users"
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-java.net.UnknownHostException: Failed to resolve 'UI-5CG44846VT.us.deloitte.com' [A(1), AAAA(28)] after 4 queries 
-	at io.netty.resolver.dns.DnsResolveContext.finishResolve(DnsResolveContext.java:1139) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-	Suppressed: The stacktrace has been enhanced by Reactor, refer to additional information below: 
-Error has been observed at the following site(s):
-	*__checkpoint ⇢ org.springframework.cloud.gateway.filter.WeightCalculatorWebFilter@5d1d9d73
-	*__checkpoint ⇢ HTTP GET "/api/users" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-		at io.netty.resolver.dns.DnsResolveContext.finishResolve(DnsResolveContext.java:1139) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.tryToFinishResolve(DnsResolveContext.java:1086) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.query(DnsResolveContext.java:443) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.onResponse(DnsResolveContext.java:668) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsResolveContext.lambda$query$0(DnsResolveContext.java:499) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListener0(DefaultPromise.java:604) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListeners0(DefaultPromise.java:597) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListenersNow(DefaultPromise.java:573) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.notifyListeners(DefaultPromise.java:506) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.setValue0(DefaultPromise.java:650) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.setSuccess0(DefaultPromise.java:639) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.DefaultPromise.trySuccess(DefaultPromise.java:119) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsQueryContext.trySuccess(DnsQueryContext.java:304) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsQueryContext.finishSuccess(DnsQueryContext.java:295) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.resolver.dns.DnsNameResolver$DnsResponseHandler.channelRead(DnsNameResolver.java:1558) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:107) ~[netty-codec-base-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.AbstractNioMessageChannel$NioMessageUnsafe.read(AbstractNioMessageChannel.java:100) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.15.Final.jar:4.2.15.Final]
-		at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
-Caused by: io.netty.resolver.dns.DnsErrorCauseException: Query failed with NXDOMAIN
-	at io.netty.resolver.dns.DnsResolveContext.onResponse(..)(Unknown Source) ~[netty-resolver-dns-4.2.15.Final.jar:4.2.15.Final]
+import com.its.user.client.IssueClient;
+import com.its.user.model.User;
+import com.its.user.service.UserService;
 
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+    private final IssueClient issueClient;
+
+    public UserController(UserService userService, IssueClient issueClient) {
+        this.userService = userService;
+        this.issueClient = issueClient;
+    }
+
+    // Get all users
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    // Register a new user
+    @PostMapping
+    public User registerUser(@Valid @RequestBody User user) {
+        return userService.registerUser(user);
+    }
+
+    // Login
+    @PostMapping("/login")
+    public User login(@RequestBody User user) {
+        return userService.login(user.getEmail(), user.getPassword());
+    }
+
+    // Get user by ID
+    @GetMapping("/{userId}")
+    public User getUserById(@PathVariable Long userId) {
+        return userService.getUserById(userId);
+    }
+
+    // Get issues assigned to a user by user ID
+    // Inter-service communication: User Service -> Issue Service
+    @GetMapping("/{userId}/issues")
+    public List<Map<String, Object>> getUserIssues(
+            @PathVariable Long userId) {
+
+        return issueClient.getIssuesByAssignee(userId);
+    }
+
+    // Get issues assigned to a user by username
+    // Here username is the existing User.name field
+    // Inter-service communication: User Service -> Issue Service
+    @GetMapping("/username/{username}/issues")
+    public List<Map<String, Object>> getUserIssuesByUsername(
+            @PathVariable String username) {
+
+        User user = userService.getUserByName(username);
+
+        return issueClient.getIssuesByAssignee(user.getId());
+    }
+}
+
+package com.its.issue.controller;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.its.issue.model.Issue;
+import com.its.issue.service.IssueService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/issues")
+public class IssueController {
+
+    private final IssueService issueService;
+
+    public IssueController(IssueService issueService) {
+        this.issueService = issueService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Issue> createIssue(
+            @Valid @RequestBody Issue issue) {
+
+        Issue savedIssue = issueService.createIssue(issue);
+
+        return new ResponseEntity<>(
+                savedIssue,
+                HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Issue>> getAllIssues() {
+
+        return new ResponseEntity<>(
+                issueService.getAllIssues(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/{issueId}")
+    public ResponseEntity<Issue> getIssueById(
+            @PathVariable Long issueId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssueById(issueId),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{issueId}")
+    public ResponseEntity<Issue> updateIssue(
+            @PathVariable Long issueId,
+            @Valid @RequestBody Issue issue) {
+
+        return new ResponseEntity<>(
+                issueService.updateIssue(issueId, issue),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<Void> deleteIssue(
+            @PathVariable Long issueId) {
+
+        issueService.deleteIssue(issueId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
+    }
+
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<Issue>> getIssuesByProject(
+            @PathVariable Long projectId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByProject(projectId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Issue>> getIssuesByOwner(
+            @PathVariable Long ownerId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByOwner(ownerId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/assignee/{assigneeId}")
+    public ResponseEntity<List<Issue>> getIssuesByAssignee(
+            @PathVariable Long assigneeId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByAssignee(assigneeId),
+                HttpStatus.OK
+        );
+    }
+}
