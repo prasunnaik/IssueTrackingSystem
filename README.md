@@ -1,21 +1,85 @@
+package com.its.issue.client;
+
+import java.util.List;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import com.its.issue.model.Project;
+
+@FeignClient(name = "project-service")
+public interface ProjectClient {
+
+    @GetMapping("/api/projects/owner/{ownerId}")
+    List<Project> getProjectsByOwner(
+            @PathVariable("ownerId") Long ownerId);
+}
+
+
+package com.its.issue.model;
+
+public class Project {
+
+    private Long id;
+    private String projectName;
+    private Long productOwnerId;
+
+    public Project() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
+    public Long getProductOwnerId() {
+        return productOwnerId;
+    }
+
+    public void setProductOwnerId(Long productOwnerId) {
+        this.productOwnerId = productOwnerId;
+    }
+}
+
+
 package com.its.issue.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.its.issue.client.ProjectClient;
 import com.its.issue.exception.IssueNotFoundException;
 import com.its.issue.model.Issue;
+import com.its.issue.model.Project;
 import com.its.issue.repository.IssueRepository;
 
 @Service
 public class IssueServiceImpl implements IssueService {
 
     private final IssueRepository issueRepository;
+    private final ProjectClient projectClient;
 
-    public IssueServiceImpl(IssueRepository issueRepository) {
+    public IssueServiceImpl(
+            IssueRepository issueRepository,
+            ProjectClient projectClient) {
+
         this.issueRepository = issueRepository;
+        this.projectClient = projectClient;
     }
 
     @Override
@@ -92,17 +156,20 @@ public class IssueServiceImpl implements IssueService {
     @Override
     public List<Issue> getIssuesByOwner(Long ownerId) {
 
-        /*
-         * Owner-based issue retrieval requires
-         * inter-service communication with Project Service.
-         *
-         * This will be implemented in the
-         * Inter-Service Communication milestone.
-         */
+        List<Project> projects =
+                projectClient.getProjectsByOwner(ownerId);
 
-        throw new UnsupportedOperationException(
-            "Owner based issue retrieval will be implemented using inter-service communication"
-        );
+        List<Issue> issues = new ArrayList<>();
+
+        for (Project project : projects) {
+
+            List<Issue> projectIssues =
+                    issueRepository.findByProjectId(project.getId());
+
+            issues.addAll(projectIssues);
+        }
+
+        return issues;
     }
 
     @Override
@@ -112,131 +179,23 @@ public class IssueServiceImpl implements IssueService {
     }
 }
 
-package com.its.issue.controller;
 
-import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
-import com.its.issue.model.Issue;
-import com.its.issue.service.IssueService;
 
-import jakarta.validation.Valid;
+@SpringBootApplication
+@EnableFeignClients
+public class IssueServiceApplication {
 
-@RestController
-@RequestMapping("/api/issues")
-public class IssueController {
-
-    private final IssueService issueService;
-
-    public IssueController(IssueService issueService) {
-        this.issueService = issueService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Issue> createIssue(
-            @Valid @RequestBody Issue issue) {
-
-        Issue savedIssue = issueService.createIssue(issue);
-
-        return new ResponseEntity<>(
-                savedIssue,
-                HttpStatus.CREATED
-        );
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Issue>> getAllIssues() {
-
-        return new ResponseEntity<>(
-                issueService.getAllIssues(),
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/{issueId}")
-    public ResponseEntity<Issue> getIssueById(
-            @PathVariable Long issueId) {
-
-        return new ResponseEntity<>(
-                issueService.getIssueById(issueId),
-                HttpStatus.OK
-        );
-    }
-
-    @PutMapping("/{issueId}")
-    public ResponseEntity<Issue> updateIssue(
-            @PathVariable Long issueId,
-            @Valid @RequestBody Issue issue) {
-
-        return new ResponseEntity<>(
-                issueService.updateIssue(issueId, issue),
-                HttpStatus.OK
-        );
-    }
-
-    @DeleteMapping("/{issueId}")
-    public ResponseEntity<Void> deleteIssue(
-            @PathVariable Long issueId) {
-
-        issueService.deleteIssue(issueId);
-
-        return new ResponseEntity<>(
-                HttpStatus.NO_CONTENT
-        );
-    }
-
-    @GetMapping("/project/{projectId}")
-    public ResponseEntity<List<Issue>> getIssuesByProject(
-            @PathVariable Long projectId) {
-
-        return new ResponseEntity<>(
-                issueService.getIssuesByProject(projectId),
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<Issue>> getIssuesByOwner(
-            @PathVariable Long ownerId) {
-
-        return new ResponseEntity<>(
-                issueService.getIssuesByOwner(ownerId),
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/assignee/{assigneeId}")
-    public ResponseEntity<List<Issue>> getIssuesByAssignee(
-            @PathVariable Long assigneeId) {
-
-        return new ResponseEntity<>(
-                issueService.getIssuesByAssignee(assigneeId),
-                HttpStatus.OK
+    public static void main(String[] args) {
+        SpringApplication.run(
+            IssueServiceApplication.class,
+            args
         );
     }
 }
 
-package com.its.issue.repository;
 
-import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.its.issue.model.Issue;
-
-public interface IssueRepository extends JpaRepository<Issue, Long> {
-
-    List<Issue> findByProjectId(Long projectId);
-
-    List<Issue> findByAssigneeId(Long assigneeId);
-}
