@@ -1,11 +1,1 @@
-login(user: {
-  email: string;
-  password: string;
-  role: string;
-}): Observable<User> {
-
-  return this.http.post<User>(
-    this.apiUrl + '/login',
-    user
-  );
-}
+curl.exe -i -X POST "http://localhost:8081/api/users/login" -H "Content-Type: application/json" -d "{\"email\":\"pratik@gmail.com\",\"password\":\"pratik@123\",\"role\":\"ASSIGNEE\"}" -o "%TEMP%\loginresponse.txt"
