@@ -1,41 +1,86 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-signup',
   standalone: true,
-  imports: [FormsModule, RouterLink],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './signup.component.html',
+  styleUrl: './signup.component.css'
 })
-export class LoginComponent {
+export class SignupComponent {
 
-  email = '';
-  password = '';
-  role = '';
+  signupForm = this.formBuilder.group({
+    name: ['', Validators.required],
 
-  login() {
-    console.log('Login clicked');
-    console.log('Email:', this.email);
-    console.log('Password:', this.password);
-    console.log('Role:', this.role);
+    email: ['', [
+      Validators.required,
+      Validators.email
+    ]],
+
+    password: ['', Validators.required],
+
+    profile: ['', [
+      Validators.required,
+      Validators.pattern('https?://.+')
+    ]],
+
+    role: ['', Validators.required]
+  });
+
+  constructor(private formBuilder: FormBuilder) {}
+
+  signup() {
+
+    if (this.signupForm.invalid) {
+      return;
+    }
+
+    console.log('Signup details:');
+    console.log(this.signupForm.value);
   }
 }
 
 
+<div class="signup-page">
 
-<div class="login-page">
-
-  <div class="login-box">
+  <div class="signup-box">
 
     <div class="title">
       Issue Tracking System
     </div>
 
-    <h2>Login</h2>
+    <h2>Signup</h2>
 
-    <form #loginForm="ngForm" (ngSubmit)="login()">
+    <form
+      [formGroup]="signupForm"
+      (ngSubmit)="signup()">
+
+      <!-- Name -->
+      <div class="form-group">
+
+        <label>Name</label>
+
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Enter name">
+
+        <div
+          class="error"
+          *ngIf="
+            signupForm.get('name')?.invalid &&
+            signupForm.get('name')?.touched
+          ">
+
+          Name is required
+
+        </div>
+
+      </div>
+
 
       <!-- Email -->
       <div class="form-group">
@@ -44,22 +89,23 @@ export class LoginComponent {
 
         <input
           type="email"
-          name="email"
-          [(ngModel)]="email"
-          required
-          email
-          #emailField="ngModel"
+          formControlName="email"
           placeholder="Enter email">
 
         <div
           class="error"
-          *ngIf="emailField.invalid && emailField.touched">
+          *ngIf="
+            signupForm.get('email')?.invalid &&
+            signupForm.get('email')?.touched
+          ">
 
-          <span *ngIf="emailField.errors?.['required']">
+          <span
+            *ngIf="signupForm.get('email')?.errors?.['required']">
             Email is required
           </span>
 
-          <span *ngIf="emailField.errors?.['email']">
+          <span
+            *ngIf="signupForm.get('email')?.errors?.['email']">
             Enter a valid email address
           </span>
 
@@ -75,17 +121,49 @@ export class LoginComponent {
 
         <input
           type="password"
-          name="password"
-          [(ngModel)]="password"
-          required
-          #passwordField="ngModel"
+          formControlName="password"
           placeholder="Password">
 
         <div
           class="error"
-          *ngIf="passwordField.invalid && passwordField.touched">
+          *ngIf="
+            signupForm.get('password')?.invalid &&
+            signupForm.get('password')?.touched
+          ">
 
           Password is required
+
+        </div>
+
+      </div>
+
+
+      <!-- Profile -->
+      <div class="form-group">
+
+        <label>Profile image URL</label>
+
+        <input
+          type="text"
+          formControlName="profile"
+          placeholder="Provide profile image URL">
+
+        <div
+          class="error"
+          *ngIf="
+            signupForm.get('profile')?.invalid &&
+            signupForm.get('profile')?.touched
+          ">
+
+          <span
+            *ngIf="signupForm.get('profile')?.errors?.['required']">
+            Profile image URL is required
+          </span>
+
+          <span
+            *ngIf="signupForm.get('profile')?.errors?.['pattern']">
+            Enter a valid image URL
+          </span>
 
         </div>
 
@@ -97,21 +175,28 @@ export class LoginComponent {
 
         <label>Role</label>
 
-        <select
-          name="role"
-          [(ngModel)]="role"
-          required
-          #roleField="ngModel">
+        <select formControlName="role">
 
-          <option value="">Select your role</option>
-          <option value="PROJECT_OWNER">Project Owner</option>
-          <option value="ASSIGNEE">Assignee</option>
+          <option value="">
+            Select your role
+          </option>
+
+          <option value="PROJECT_OWNER">
+            Project Owner
+          </option>
+
+          <option value="ASSIGNEE">
+            Assignee
+          </option>
 
         </select>
 
         <div
           class="error"
-          *ngIf="roleField.invalid && roleField.touched">
+          *ngIf="
+            signupForm.get('role')?.invalid &&
+            signupForm.get('role')?.touched
+          ">
 
           Role is required
 
@@ -120,25 +205,25 @@ export class LoginComponent {
       </div>
 
 
-      <!-- Login Button -->
+      <!-- Button -->
       <button
         type="submit"
-        [disabled]="loginForm.invalid">
+        [disabled]="signupForm.invalid">
 
-        Login
+        Signup
 
       </button>
 
     </form>
 
 
-    <!-- Signup -->
-    <div class="signup-link">
+    <!-- Login link -->
+    <div class="login-link">
 
-      Don't have an account?
+      Already have an account?
 
-      <a routerLink="/signup">
-        Signup
+      <a routerLink="/login">
+        Login
       </a>
 
     </div>
@@ -147,7 +232,8 @@ export class LoginComponent {
 
 </div>
 
-.login-page {
+
+.signup-page {
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -155,7 +241,7 @@ export class LoginComponent {
   background-color: #f5f5f5;
 }
 
-.login-box {
+.signup-box {
   width: 350px;
   padding: 25px;
   background-color: white;
@@ -215,13 +301,12 @@ button:disabled {
   margin-top: 4px;
 }
 
-.signup-link {
+.login-link {
   text-align: center;
   margin-top: 20px;
   font-size: 13px;
 }
 
-.signup-link a {
+.login-link a {
   color: #007bff;
-  cursor: pointer;
 }
