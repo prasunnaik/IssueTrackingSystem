@@ -1,41 +1,206 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { User } from '../models/user';
-import { Observable } from 'rxjs';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { UserService } from '../../services/user.service';
 
-@Injectable({
-  providedIn: 'root'
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink
+  ],
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
 })
-export class UserService {
+export class LoginComponent {
 
-  private apiUrl = 'http://localhost:8080/api/users';
+  user = {
+    email: '',
+    password: '',
+    role: ''
+  };
 
-  constructor(private http: HttpClient) {}
+  errorMessage = '';
 
-  signup(user: User): Observable<User> {
-    return this.http.post<User>(this.apiUrl, user);
-  }
+  constructor(
+    private userService: UserService,
+    private router: Router
+  ) {}
 
-  login(user: User): Observable<User> {
-    return this.http.post<User>(
-      this.apiUrl + '/login',
-      user
-    );
-  }
+  login() {
 
-  getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(this.apiUrl);
-  }
+    this.errorMessage = '';
 
-  getUserById(id: number): Observable<User> {
-    return this.http.get<User>(
-      this.apiUrl + '/' + id
-    );
-  }
+    this.userService.login(this.user).subscribe({
 
-  getUserIssues(id: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      this.apiUrl + '/' + id + '/issues'
-    );
+      next: (response) => {
+
+        console.log('Login successful');
+        console.log(response);
+
+        localStorage.setItem(
+          'user',
+          JSON.stringify(response)
+        );
+
+        if (response.role === 'PROJECT_OWNER') {
+          this.router.navigate(['/owner-dashboard']);
+        } else if (response.role === 'ASSIGNEE') {
+          this.router.navigate(['/assignee-dashboard']);
+        }
+
+      },
+
+      error: (error) => {
+
+        console.log(error);
+
+        this.errorMessage = 'Invalid email or password';
+
+      }
+
+    });
   }
 }
+
+
+<div class="login-page">
+
+  <div class="login-box">
+
+    <h2>Issue Tracking System</h2>
+
+    <h3>Login</h3>
+
+    <form #loginForm="ngForm" (ngSubmit)="login()">
+
+      <!-- Email -->
+      <div class="form-group">
+
+        <label>Email address</label>
+
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="user.email"
+          required
+          email
+          #emailField="ngModel"
+          placeholder="Enter email">
+
+        <div
+          class="error"
+          *ngIf="emailField.invalid && emailField.touched">
+
+          <span *ngIf="emailField.errors?.['required']">
+            Email is required
+          </span>
+
+          <span *ngIf="emailField.errors?.['email']">
+            Enter a valid email address
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- Password -->
+      <div class="form-group">
+
+        <label>Password</label>
+
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="user.password"
+          required
+          #passwordField="ngModel"
+          placeholder="Enter password">
+
+        <div
+          class="error"
+          *ngIf="passwordField.invalid && passwordField.touched">
+
+          Password is required
+
+        </div>
+
+      </div>
+
+
+      <!-- Role -->
+      <div class="form-group">
+
+        <label>Role</label>
+
+        <select
+          name="role"
+          [(ngModel)]="user.role"
+          required
+          #roleField="ngModel">
+
+          <option value="">
+            Select your role
+          </option>
+
+          <option value="PROJECT_OWNER">
+            Project Owner
+          </option>
+
+          <option value="ASSIGNEE">
+            Assignee
+          </option>
+
+        </select>
+
+        <div
+          class="error"
+          *ngIf="roleField.invalid && roleField.touched">
+
+          Role is required
+
+        </div>
+
+      </div>
+
+
+      <!-- Backend error -->
+      <div
+        class="server-error"
+        *ngIf="errorMessage">
+
+        {{ errorMessage }}
+
+      </div>
+
+
+      <!-- Login button -->
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid">
+
+        Login
+
+      </button>
+
+    </form>
+
+
+    <!-- Signup link -->
+    <div class="signup-link">
+
+      Don't have an account?
+
+      <a routerLink="/signup">
+        Signup
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
