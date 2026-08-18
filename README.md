@@ -1,110 +1,117 @@
-.create-issue-container {
-  min-height: 100vh;
-  padding: 40px;
-  background: #f5f6fa;
+export interface Issue {
+  id?: number;
+  projectId?: number;
+  assigneeId?: number;
+
+  summary: string;
+  description: string;
+
+  status: string;
+  priority: string;
+  type: string;
+
+  storyPoint: number;
+
+  sprint?: string;
+  tags?: string;
+
+  createdDate?: string;
+  lastUpdatedDate?: string;
 }
 
-.issue-card {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 30px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-issue-details',
+  imports: [],
+  templateUrl: './issue-details.component.html',
+  styleUrl: './issue-details.component.css'
+})
+export class IssueDetailsComponent {
+
 }
 
-.issue-card h2 {
-  margin-bottom: 5px;
-  color: #333;
+<p>issue-details works!</p>
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-edit-issue',
+  imports: [],
+  templateUrl: './edit-issue.component.html',
+  styleUrl: './edit-issue.component.css'
+})
+export class EditIssueComponent {
+
 }
 
-.subtitle {
-  margin-bottom: 25px;
-  color: #777;
-}
+<p>edit-issue works!</p>
 
-.form-group {
-  margin-bottom: 18px;
-}
+import { Routes } from '@angular/router';
+import { CreateIssueComponent } from './components/create-issue/create-issue.component';
 
-.form-group label {
-  display: block;
-  margin-bottom: 7px;
-  font-weight: 600;
-  color: #333;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.form-group textarea {
-  resize: vertical;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #1976d2;
-}
-
-.button-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 25px;
-}
-
-.create-button,
-.back-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.create-button {
-  background: #1976d2;
-  color: white;
-}
-
-.create-button:hover {
-  background: #125aa0;
-}
-
-.create-button:disabled {
-  background: #aaa;
-  cursor: not-allowed;
-}
-
-.back-button {
-  background: #ddd;
-  color: #333;
-}
-
-.back-button:hover {
-  background: #ccc;
-}
-
-.error-message {
-  padding: 10px;
-  margin-bottom: 20px;
-  background: #ffebee;
-  color: #c62828;
-  border-radius: 5px;
-}
-
-.success-message {
-  padding: 10px;
-  margin-bottom: 20px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 5px;
-}
+export const routes: Routes = [
+  {
+    path: 'create-issue',
+    component: CreateIssueComponent
+  },
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./components/login/login.component')
+        .then(m => m.LoginComponent)
+  },
+  {
+    path: 'signup',
+    loadComponent: () =>
+      import('./components/signup/signup.component')
+        .then(m => m.SignupComponent)
+  },
+  {
+    path: 'owner-dashboard',
+    loadComponent: () =>
+      import('./components/owner-dashboard/owner-dashboard.component')
+        .then(m => m.OwnerDashboardComponent)
+  },
+  {
+    path: 'create-project',
+    loadComponent: () =>
+      import('./components/create-project/create-project.component')
+        .then(m => m.CreateProjectComponent)
+  },
+  {
+    path: 'create-issue',
+    loadComponent: () =>
+      import('./components/create-issue/create-issue.component')
+        .then(m => m.CreateIssueComponent)
+  },
+  {
+    path: 'issue/:id',
+    loadComponent: () =>
+      import('./components/issue-details/issue-details.component')
+        .then(m => m.IssueDetailsComponent)
+  },
+  {
+    path: 'edit-issue/:id',
+    loadComponent: () =>
+      import('./components/edit-issue/edit-issue.component')
+        .then(m => m.EditIssueComponent)
+  },
+  {
+    path: 'assignee-dashboard',
+    loadComponent: () =>
+      import('./components/assignee-dashboard/assignee-dashboard.component')
+        .then(m => m.AssigneeDashboardComponent)
+  },
+  {
+    path: 'assignee-issue/:id',
+    loadComponent: () =>
+      import('./components/assignee-issue-details/assignee-issue-details.component')
+        .then(m => m.AssigneeIssueDetailsComponent)
+  }
+];
