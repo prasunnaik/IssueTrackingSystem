@@ -1,11 +1,15 @@
-@Override
-public Issue updateIssuePriority(Long issueId, String priority) {
+@PutMapping("/{issueId}/priority")
+public ResponseEntity<Issue> updateIssuePriority(
+        @PathVariable Long issueId,
+        @RequestBody Map<String, String> request) {
 
-    Issue issue = issueRepository.findById(issueId)
-            .orElseThrow(() ->
-                    new RuntimeException("Issue not found: " + issueId));
+    String priority = request.get("priority");
 
-    issue.setPriority(priority);
+    Issue updatedIssue =
+            issueService.updateIssuePriority(issueId, priority);
 
-    return issueRepository.save(issue);
+    return new ResponseEntity<>(
+            updatedIssue,
+            HttpStatus.OK
+    );
 }
