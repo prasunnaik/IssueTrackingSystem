@@ -1,160 +1,305 @@
-package com.its.issue.service;
+import { Component, OnInit } from '@angular/core';
+import { IssueService } from '../../services/issue.service';
+import { Issue } from '../../models/issue';
+import { Project } from '../../models/project';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+@Component({
+  selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
+})
+export class OwnerDashboardComponent implements OnInit {
 
-import org.springframework.stereotype.Service;
+  // Project currently displayed
+  project: Project = {
+    id: 3,
+    projectName: 'PMS',
+    projectOwnerId: 1,
+    startDate: '2026-08-10',
+    endDate: '2027-01-31'
+  };
 
-import com.its.issue.client.ProjectClient;
-import com.its.issue.exception.IssueNotFoundException;
-import com.its.issue.model.Issue;
-import com.its.issue.model.Project;
-import com.its.issue.repository.IssueRepository;
+  // Issues belonging to the project
+  issues: Issue[] = [];
 
-@Service
-public class IssueServiceImpl implements IssueService {
+  // Filter
+  selectedFilter: string = 'ALL';
 
-    private final IssueRepository issueRepository;
-    private final ProjectClient projectClient;
+  // Error message
+  errorMessage: string = '';
 
-    public IssueServiceImpl(
-            IssueRepository issueRepository,
-            ProjectClient projectClient) {
+  constructor(
+    private issueService: IssueService
+  ) {}
 
-        this.issueRepository = issueRepository;
-        this.projectClient = projectClient;
+  ngOnInit(): void {
+    this.loadIssues();
+  }
+
+  // =========================================================
+  // LOAD ISSUES
+  // =========================================================
+
+  loadIssues(): void {
+
+    if (this.project.id === undefined) {
+      this.errorMessage = 'Project ID is missing.';
+      return;
     }
 
-    @Override
-    public Issue createIssue(Issue issue) {
+    this.issueService
+      .getIssuesByProject(this.project.id)
+      .subscribe({
+        next: (data: Issue[]) => {
+          this.issues = data || [];
+          this.errorMessage = '';
+        },
 
-        issue.setCreatedDate(LocalDateTime.now());
-        issue.setLastUpdatedDate(LocalDateTime.now());
-
-        return issueRepository.save(issue);
-    }
-
-    @Override
-    public List<Issue> getAllIssues() {
-
-        return issueRepository.findAll();
-    }
-
-    @Override
-    public Issue getIssueById(Long issueId) {
-
-        return issueRepository.findById(issueId)
-                .orElseThrow(() ->
-                    new IssueNotFoundException(
-                        "Issue not found with id: " + issueId
-                    )
-                );
-    }
-
-    @Override
-    public Issue updateIssue(Long issueId, Issue issue) {
-
-        Issue existingIssue = issueRepository.findById(issueId)
-                .orElseThrow(() ->
-                    new IssueNotFoundException(
-                        "Issue not found with id: " + issueId
-                    )
-                );
-
-        existingIssue.setSummary(issue.getSummary());
-        existingIssue.setDescription(issue.getDescription());
-        existingIssue.setPriority(issue.getPriority());
-        existingIssue.setAssigneeId(issue.getAssigneeId());
-        existingIssue.setStatus(issue.getStatus());
-        existingIssue.setProjectId(issue.getProjectId());
-        existingIssue.setSprint(issue.getSprint());
-        existingIssue.setStoryPoint(issue.getStoryPoint());
-        existingIssue.setTags(issue.getTags());
-        existingIssue.setType(issue.getType());
-
-        existingIssue.setLastUpdatedDate(LocalDateTime.now());
-
-        return issueRepository.save(existingIssue);
-    }
-
-    @Override
-    public void deleteIssue(Long issueId) {
-
-        Issue existingIssue = issueRepository.findById(issueId)
-                .orElseThrow(() ->
-                    new IssueNotFoundException(
-                        "Issue not found with id: " + issueId
-                    )
-                );
-
-        issueRepository.delete(existingIssue);
-    }
-
-    @Override
-    public List<Issue> getIssuesByProject(Long projectId) {
-
-        return issueRepository.findByProjectId(projectId);
-    }
-
-    @Override
-    public List<Issue> getIssuesByOwner(Long ownerId) {
-
-        List<Project> projects =
-                projectClient.getProjectsByOwner(ownerId);
-
-        List<Issue> issues = new ArrayList<>();
-
-        for (Project project : projects) {
-
-            List<Issue> projectIssues =
-                    issueRepository.findByProjectId(project.getId());
-
-            issues.addAll(projectIssues);
+        error: (error) => {
+          console.error('Failed to load issues:', error);
+          this.errorMessage = 'Failed to load issues.';
         }
+      });
+  }
 
-        return issues;
+  // =========================================================
+  // REFRESH DASHBOARD
+  // =========================================================
+
+  refreshDashboard(): void {
+    this.loadIssues();
+  }
+
+  // =========================================================
+  // FILTER
+  // =========================================================
+
+  filterIssues(filter: string): void {
+    this.selectedFilter = filter;
+  }
+
+  get filteredIssues(): Issue[] {
+
+    if (this.selectedFilter === 'ALL') {
+      return this.issues;
     }
 
-    @Override
-    public List<Issue> getIssuesByAssignee(Long assigneeId) {
-
-        return issueRepository.findByAssigneeId(assigneeId);
+    if (this.selectedFilter === 'OPEN') {
+      return this.issues.filter(
+        issue => issue.status === 'OPEN'
+      );
     }
 
-    public Issue updateIssueStatus(Long issueId, String status) {
+    if (this.selectedFilter === 'IN_PROGRESS') {
+      return this.issues.filter(
+        issue => issue.status === 'IN_PROGRESS'
+      );
+    }
 
-    Issue issue = issueRepository.findById(issueId)
-            .orElseThrow(() ->
-                    new RuntimeException("Issue not found: " + issueId));
+    if (this.selectedFilter === 'HIGH') {
+      return this.issues.filter(
+        issue => issue.priority === 'HIGH'
+      );
+    }
 
-    issue.setStatus(status);
+    if (this.selectedFilter === 'MEDIUM') {
+      return this.issues.filter(
+        issue => issue.priority === 'MEDIUM'
+      );
+    }
 
-    return issueRepository.save(issue);
-}
+    if (this.selectedFilter === 'CLOSED') {
+      return this.issues.filter(
+        issue => issue.status === 'CLOSED'
+      );
+    }
 
-@Override
-public Issue updateIssuePriority(Long issueId, String priority) {
+    return this.issues;
+  }
 
-    Issue issue = issueRepository.findById(issueId)
-            .orElseThrow(() ->
-                    new RuntimeException("Issue not found: " + issueId));
+  // =========================================================
+  // DASHBOARD COUNTS
+  // =========================================================
 
-    issue.setPriority(priority);
+  getTotalIssues(): number {
+    return this.issues.length;
+  }
 
-    return issueRepository.save(issue);
-}
+  getOpenIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'OPEN'
+    ).length;
+  }
 
-@Override
-public Issue updateIssueAssignee(Long issueId, Long assigneeId) {
+  getHighPriorityIssues(): number {
+    return this.issues.filter(
+      issue => issue.priority === 'HIGH'
+    ).length;
+  }
 
-    Issue issue = issueRepository.findById(issueId)
-            .orElseThrow(() ->
-                    new RuntimeException("Issue not found: " + issueId));
+  getInProgressIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    ).length;
+  }
 
-    issue.setAssigneeId(assigneeId);
+  getClosedIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'CLOSED'
+    ).length;
+  }
 
-    return issueRepository.save(issue);
-}
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
 
+  updateStatus(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+    const status = select.value;
+
+    this.issueService
+      .updateIssueStatus(issue.id, status)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.status = updatedIssue.status;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue status:',
+            error
+          );
+
+          alert('Failed to update issue status.');
+        }
+      });
+  }
+
+  // =========================================================
+  // UPDATE PRIORITY
+  // =========================================================
+
+  updatePriority(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+    const priority = select.value;
+
+    this.issueService
+      .updateIssuePriority(issue.id, priority)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.priority = updatedIssue.priority;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue priority:',
+            error
+          );
+
+          alert('Failed to update issue priority.');
+        }
+      });
+  }
+
+  // =========================================================
+  // UPDATE ASSIGNEE
+  // =========================================================
+
+  updateAssignee(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+
+    const assigneeId = Number(select.value);
+
+    if (!assigneeId) {
+      alert('Please select a valid assignee.');
+      return;
+    }
+
+    this.issueService
+      .updateIssueAssignee(issue.id, assigneeId)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.assigneeId = updatedIssue.assigneeId;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue assignee:',
+            error
+          );
+
+          alert('Failed to update issue assignee.');
+        }
+      });
+  }
+
+  // =========================================================
+  // STATUS CLASS
+  // =========================================================
+
+  getStatusClass(status: string): string {
+
+    if (status === 'OPEN') {
+      return 'open';
+    }
+
+    if (status === 'IN_PROGRESS') {
+      return 'progress';
+    }
+
+    if (status === 'CLOSED') {
+      return 'closed';
+    }
+
+    return '';
+  }
+
+  // =========================================================
+  // PRIORITY CLASS
+  // =========================================================
+
+  getPriorityClass(priority: string): string {
+
+    if (priority === 'HIGH') {
+      return 'high';
+    }
+
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
+
+    if (priority === 'LOW') {
+      return 'low';
+    }
+
+    return '';
+  }
 }
