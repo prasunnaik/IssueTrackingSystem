@@ -2,23 +2,28 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ProjectService } from '../../services/project.service';
-import { Project } from '../../models/project';
 import { IssueService } from '../../services/issue.service';
+
+import { Project } from '../../models/project';
+import { Issue } from '../../models/issue';
 
 @Component({
   selector: 'app-owner-dashboard',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './owner-dashboard.component.html',
-  styleUrl: './owner-dashboard.component.css'
+  styleUrls: ['./owner-dashboard.component.css']
 })
 export class OwnerDashboardComponent implements OnInit {
 
   projects: Project[] = [];
 
-  issues: any[] = [];
+  issues: Issue[] = [];
+  filteredIssues: Issue[] = [];
 
   errorMessage = '';
+
+  selectedFilter = 'ALL';
 
   constructor(
     private projectService: ProjectService,
@@ -26,12 +31,6 @@ export class OwnerDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadDashboard();
-  }
-
-  loadDashboard(): void {
-
-    this.errorMessage = '';
 
     const userData = localStorage.getItem('user');
 
@@ -40,17 +39,43 @@ export class OwnerDashboardComponent implements OnInit {
       return;
     }
 
-    const user = JSON.parse(userData);
+    let user: any;
 
+    try {
+      user = JSON.parse(userData);
+    } catch (error) {
+      this.errorMessage = 'Invalid user data';
+      return;
+    }
+
+    if (!user.id) {
+      this.errorMessage = 'User ID not found';
+      return;
+    }
+
+    // Load projects belonging to the logged-in owner
     this.projectService.getProjectsByOwner(user.id).subscribe({
-
       next: (response: Project[]) => {
 
         this.projects = response;
 
         console.log('Owner projects:', response);
 
-        this.loadIssues();
+        if (this.projects.length === 0) {
+          this.errorMessage = 'No projects found';
+          return;
+        }
+
+        // Load issues for the first project
+        // This matches the current dashboard implementation.
+        const projectId = this.projects[0].id;
+
+        if (projectId === undefined) {
+          this.errorMessage = 'Project ID not found';
+          return;
+        }
+
+        this.loadIssues(projectId);
       },
 
       error: (error) => {
@@ -59,74 +84,110 @@ export class OwnerDashboardComponent implements OnInit {
 
         this.errorMessage = 'Unable to load projects';
       }
-
     });
   }
 
-  loadIssues(): void {
 
-    this.issues = [];
+  loadIssues(projectId: number): void {
 
-    if (this.projects.length === 0) {
+    this.issueService.getIssuesByProject(projectId).subscribe({
+
+      next: (response: Issue[]) => {
+
+        this.issues = response;
+
+        this.filteredIssues = response;
+
+        console.log('Project issues:', response);
+      },
+
+      error: (error) => {
+
+        console.error('Error loading issues:', error);
+
+        this.errorMessage = 'Unable to load issues';
+      }
+    });
+  }
+
+
+  filterIssues(filter: string): void {
+
+    this.selectedFilter = filter;
+
+    if (filter === 'ALL') {
+
+      this.filteredIssues = this.issues;
+
       return;
     }
 
-    this.projects.forEach((project) => {
+    if (filter === 'OPEN') {
 
-      if (project.id !== undefined) {
+      this.filteredIssues = this.issues.filter(
+        issue => issue.status?.toUpperCase() === 'OPEN'
+      );
 
-        this.issueService
-          .getIssuesByProject(project.id)
-          .subscribe({
+      return;
+    }
 
-            next: (response) => {
+    if (filter === 'HIGH') {
 
-              this.issues = [
-                ...this.issues,
-                ...response
-              ];
+      this.filteredIssues = this.issues.filter(
+        issue => issue.priority?.toUpperCase() === 'HIGH'
+      );
 
-              console.log(
-                'Project issues:',
-                project.id,
-                response
-              );
-            },
+      return;
+    }
 
-            error: (error) => {
+    if (filter === 'MEDIUM') {
 
-              console.error(
-                'Error loading issues for project:',
-                project.id,
-                error
-              );
-            }
+      this.filteredIssues = this.issues.filter(
+        issue => issue.priority?.toUpperCase() === 'MEDIUM'
+      );
 
-          });
-      }
+      return;
+    }
 
-    });
+    if (filter === 'CLOSED') {
+
+      this.filteredIssues = this.issues.filter(
+        issue => issue.status?.toUpperCase() === 'CLOSED'
+      );
+
+      return;
+    }
+
+    this.filteredIssues = this.issues;
   }
 
-  getOpenIssues(): number {
+
+  get totalIssues(): number {
+    return this.issues.length;
+  }
+
+
+  get openIssues(): number {
 
     return this.issues.filter(
-      issue =>
-        issue.status &&
-        issue.status.toString().toUpperCase() === 'OPEN'
+      issue => issue.status?.toUpperCase() === 'OPEN'
     ).length;
   }
 
-  getHighPriorityIssues(): number {
+
+  get highPriorityIssues(): number {
 
     return this.issues.filter(
-      issue =>
-        issue.priority &&
-        issue.priority.toString().toUpperCase() === 'HIGH'
+      issue => issue.priority?.toUpperCase() === 'HIGH'
     ).length;
+  }
+
+
+  refresh(): void {
+
+    window.location.reload();
   }
 }
-
 
 <div class="dashboard">
 
@@ -135,6 +196,7 @@ export class OwnerDashboardComponent implements OnInit {
 
     <div>
       <h1>Project Owner Dashboard</h1>
+
       <p class="subtitle">
         Manage your projects and track issues
       </p>
@@ -142,14 +204,14 @@ export class OwnerDashboardComponent implements OnInit {
 
     <button
       class="refresh-btn"
-      (click)="loadDashboard()">
+      (click)="refresh()">
       Refresh
     </button>
 
   </div>
 
 
-  <!-- Error Message -->
+  <!-- Error -->
   <p
     *ngIf="errorMessage"
     class="error">
@@ -157,24 +219,10 @@ export class OwnerDashboardComponent implements OnInit {
   </p>
 
 
-  <!-- No Projects -->
-  <div
-    *ngIf="projects.length === 0 && !errorMessage"
-    class="empty-state">
-
-    <h3>No projects found</h3>
-
-    <p>
-      No projects are currently assigned to you.
-    </p>
-
-  </div>
-
-
   <!-- Projects -->
   <div
-    class="project-list"
-    *ngIf="projects.length > 0">
+    *ngIf="projects.length > 0"
+    class="project-list">
 
     <div
       class="project-card"
@@ -190,23 +238,24 @@ export class OwnerDashboardComponent implements OnInit {
             {{ project.projectName }}
           </h2>
 
-          <p class="project-id">
+          <p>
             Project ID: {{ project.id }}
           </p>
 
         </div>
 
+
         <div class="project-dates">
 
-          <div>
-            <span>Start:</span>
+          <span>
+            <strong>Start:</strong>
             {{ project.startDate }}
-          </div>
+          </span>
 
-          <div>
-            <span>End:</span>
+          <span>
+            <strong>End:</strong>
             {{ project.endDate }}
-          </div>
+          </span>
 
         </div>
 
@@ -216,10 +265,15 @@ export class OwnerDashboardComponent implements OnInit {
       <!-- Statistics -->
       <div class="statistics">
 
-        <div class="stat-card">
+
+        <!-- Total -->
+        <div
+          class="stat-card"
+          [class.active]="selectedFilter === 'ALL'"
+          (click)="filterIssues('ALL')">
 
           <div class="stat-number">
-            {{ issues.length }}
+            {{ totalIssues }}
           </div>
 
           <div class="stat-label">
@@ -229,10 +283,14 @@ export class OwnerDashboardComponent implements OnInit {
         </div>
 
 
-        <div class="stat-card">
+        <!-- Open -->
+        <div
+          class="stat-card"
+          [class.active]="selectedFilter === 'OPEN'"
+          (click)="filterIssues('OPEN')">
 
           <div class="stat-number">
-            {{ getOpenIssues() }}
+            {{ openIssues }}
           </div>
 
           <div class="stat-label">
@@ -242,10 +300,14 @@ export class OwnerDashboardComponent implements OnInit {
         </div>
 
 
-        <div class="stat-card">
+        <!-- High Priority -->
+        <div
+          class="stat-card"
+          [class.active]="selectedFilter === 'HIGH'"
+          (click)="filterIssues('HIGH')">
 
           <div class="stat-number">
-            {{ getHighPriorityIssues() }}
+            {{ highPriorityIssues }}
           </div>
 
           <div class="stat-label">
@@ -253,6 +315,42 @@ export class OwnerDashboardComponent implements OnInit {
           </div>
 
         </div>
+
+      </div>
+
+
+      <!-- Filters -->
+      <div class="filters">
+
+        <button
+          [class.selected]="selectedFilter === 'ALL'"
+          (click)="filterIssues('ALL')">
+          All
+        </button>
+
+        <button
+          [class.selected]="selectedFilter === 'OPEN'"
+          (click)="filterIssues('OPEN')">
+          Open
+        </button>
+
+        <button
+          [class.selected]="selectedFilter === 'HIGH'"
+          (click)="filterIssues('HIGH')">
+          High Priority
+        </button>
+
+        <button
+          [class.selected]="selectedFilter === 'MEDIUM'"
+          (click)="filterIssues('MEDIUM')">
+          Medium
+        </button>
+
+        <button
+          [class.selected]="selectedFilter === 'CLOSED'"
+          (click)="filterIssues('CLOSED')">
+          Closed
+        </button>
 
       </div>
 
@@ -265,13 +363,13 @@ export class OwnerDashboardComponent implements OnInit {
         </h3>
 
 
-        <!-- Issues Found -->
+        <!-- Issues exist -->
         <div
-          *ngIf="issues.length > 0">
+          *ngIf="filteredIssues.length > 0">
 
           <div
             class="issue-card"
-            *ngFor="let issue of issues">
+            *ngFor="let issue of filteredIssues">
 
 
             <!-- Issue Header -->
@@ -281,7 +379,7 @@ export class OwnerDashboardComponent implements OnInit {
                 {{ issue.summary }}
               </h4>
 
-              <span class="status-badge">
+              <span class="status">
                 {{ issue.status }}
               </span>
 
@@ -300,7 +398,7 @@ export class OwnerDashboardComponent implements OnInit {
             </p>
 
 
-            <!-- Issue Details -->
+            <!-- Issue details -->
             <div class="issue-details">
 
               <span>
@@ -330,18 +428,28 @@ export class OwnerDashboardComponent implements OnInit {
         </div>
 
 
-        <!-- No Issues -->
-        <p
-          *ngIf="issues.length === 0"
+        <!-- No issues after filtering -->
+        <div
+          *ngIf="filteredIssues.length === 0"
           class="no-issues">
 
-          No issues found for this project.
+          No issues found for this filter.
 
-        </p>
+        </div>
 
       </div>
 
     </div>
+
+  </div>
+
+
+  <!-- No projects -->
+  <div
+    *ngIf="projects.length === 0 && !errorMessage"
+    class="no-projects">
+
+    No projects found.
 
   </div>
 
@@ -368,7 +476,6 @@ export class OwnerDashboardComponent implements OnInit {
 .dashboard-header h1 {
   margin: 0;
   font-size: 32px;
-  color: #222;
 }
 
 .subtitle {
@@ -377,20 +484,14 @@ export class OwnerDashboardComponent implements OnInit {
 }
 
 
-/* Refresh Button */
+/* Refresh */
 
 .refresh-btn {
-  padding: 11px 22px;
+  padding: 10px 20px;
   border: none;
   border-radius: 6px;
-  background: #1976d2;
-  color: white;
-  font-size: 14px;
   cursor: pointer;
-}
-
-.refresh-btn:hover {
-  background: #125ca1;
+  font-weight: bold;
 }
 
 
@@ -399,68 +500,44 @@ export class OwnerDashboardComponent implements OnInit {
 .error {
   padding: 12px;
   border-radius: 6px;
-  background: #ffebee;
-  color: #c62828;
   margin-bottom: 20px;
-}
-
-
-/* Empty State */
-
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  color: #777;
 }
 
 
 /* Project */
 
-.project-list {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
 .project-card {
-  background: white;
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 25px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
 }
 
-
-/* Project Header */
 
 .project-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1px solid #ddd;
   padding-bottom: 20px;
+  border-bottom: 1px solid #ddd;
 }
+
 
 .project-header h2 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
+  margin: 0 0 10px 0;
 }
 
-.project-id {
+
+.project-header p {
   margin: 0;
-  color: #777;
 }
+
 
 .project-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   text-align: right;
-  color: #555;
-  line-height: 1.8;
-}
-
-.project-dates span {
-  font-weight: bold;
 }
 
 
@@ -469,27 +546,65 @@ export class OwnerDashboardComponent implements OnInit {
 .statistics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  gap: 20px;
   margin: 25px 0;
 }
 
+
 .stat-card {
-  text-align: center;
-  padding: 20px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fafafa;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
 }
+
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+
+.stat-card.active {
+  border: 2px solid #777;
+}
+
 
 .stat-number {
   font-size: 30px;
   font-weight: bold;
-  color: #1976d2;
 }
 
+
 .stat-label {
-  margin-top: 6px;
+  margin-top: 8px;
   color: #777;
+}
+
+
+/* Filters */
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+
+.filters button {
+  padding: 9px 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+
+.filters button.selected {
+  font-weight: bold;
+  border: 2px solid #555;
 }
 
 
@@ -497,26 +612,23 @@ export class OwnerDashboardComponent implements OnInit {
 
 .issues-section h3 {
   margin-bottom: 15px;
-  font-size: 20px;
 }
 
-
-/* Issue Card */
 
 .issue-card {
   border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 18px;
+  border-radius: 10px;
+  padding: 20px;
   margin-bottom: 15px;
-  background: #fff;
 }
+
 
 .issue-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
 }
+
 
 .issue-header h4 {
   margin: 0;
@@ -524,48 +636,37 @@ export class OwnerDashboardComponent implements OnInit {
 }
 
 
-/* Status */
-
-.status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  background: #e8f5e9;
-  color: #2e7d32;
+.status {
+  padding: 5px 12px;
+  border-radius: 15px;
   font-size: 12px;
   font-weight: bold;
 }
 
 
-/* Issue Details */
-
-.issue-card p {
-  margin: 8px 0;
-  color: #555;
-}
-
 .issue-details {
   display: flex;
+  gap: 25px;
   flex-wrap: wrap;
-  gap: 20px;
   margin-top: 15px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
 }
+
 
 .issue-details span {
-  color: #555;
+  font-size: 14px;
 }
 
 
-/* No Issues */
+/* Empty states */
 
-.no-issues {
-  color: #777;
-  padding: 15px;
+.no-issues,
+.no-projects {
+  padding: 20px;
+  text-align: center;
 }
 
 
-/* Responsive */
+/* Mobile */
 
 @media (max-width: 700px) {
 
@@ -597,5 +698,4 @@ export class OwnerDashboardComponent implements OnInit {
     align-items: flex-start;
     gap: 10px;
   }
-
 }
