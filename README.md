@@ -7,9 +7,6 @@
     {{ errorMessage }}
   </p>
 
-  <!-- Debug: confirms data is reaching HTML -->
-  <pre *ngIf="projects.length > 0">{{ projects | json }}</pre>
-
   <!-- Projects -->
   <div *ngIf="projects.length > 0">
 
@@ -36,6 +33,7 @@
 
       <h3>Issues</h3>
 
+      <!-- Issues -->
       <div *ngIf="issues && issues.length > 0">
 
         <div class="issue-card" *ngFor="let issue of issues">
