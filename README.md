@@ -1,20 +1,38 @@
-export interface Issue {
-  id?: number;
-  projectId?: number;
-  assigneeId?: number;
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-  summary: string;
-  description: string;
+@Injectable({
+  providedIn: 'root'
+})
+export class IssueService {
 
-  status: string;
-  priority: string;
-  type: string;
+  private apiUrl = 'http://localhost:8083/api/issues';
 
-  storyPoint: number;
+  constructor(private http: HttpClient) {}
 
-  sprint?: string;
-  tags?: string;
+  getIssuesByProject(projectId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/project/${projectId}`
+    );
+  }
 
-  createdDate?: string;
-  lastUpdatedDate?: string;
+  getIssueById(issueId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/${issueId}`
+    );
+  }
+
+  updateIssue(issueId: number, issue: any): Observable<any> {
+    return this.http.put<any>(
+      `${this.apiUrl}/${issueId}`,
+      issue
+    );
+  }
+
+  deleteIssue(issueId: number): Observable<any> {
+    return this.http.delete<any>(
+      `${this.apiUrl}/${issueId}`
+    );
+  }
 }
