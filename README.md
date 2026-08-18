@@ -1,182 +1,60 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-import { ProjectService } from '../../services/project.service';
-import { IssueService } from '../../services/issue.service';
-
-@Component({
-  selector: 'app-owner-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './owner-dashboard.component.html',
-  styleUrls: ['./owner-dashboard.component.css']
+@Injectable({
+  providedIn: 'root'
 })
-export class OwnerDashboardComponent implements OnInit {
+export class IssueService {
 
-  projects: any[] = [];
-
-  issues: any[] = [];
-
-  errorMessage: string = '';
+  private apiUrl = 'http://localhost:8083/api/issues';
 
   constructor(
-    private projectService: ProjectService,
-    private issueService: IssueService
+    private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
-    this.loadProjects();
-  }
+  getIssuesByProject(
+    projectId: number
+  ): Observable<any[]> {
 
-
-  // =========================
-  // LOAD PROJECTS
-  // =========================
-
-  loadProjects(): void {
-
-    this.errorMessage = '';
-
-    this.projectService.getProjectsByOwner(1).subscribe({
-
-      next: (response: any[]) => {
-
-        console.log('Projects received:', response);
-
-        this.projects = response;
-
-        if (this.projects.length > 0) {
-
-          const projectId = this.projects[0].id;
-
-          this.loadIssues(projectId);
-
-        } else {
-
-          this.issues = [];
-
-        }
-
-      },
-
-      error: (error: any) => {
-
-        console.error('Error loading projects:', error);
-
-        this.errorMessage = 'Unable to load projects.';
-
-        this.projects = [];
-        this.issues = [];
-
-      }
-
-    });
-  }
-
-
-  // =========================
-  // LOAD ISSUES
-  // =========================
-
-  loadIssues(projectId: number): void {
-
-    this.issueService.getIssuesByProject(projectId).subscribe({
-
-      next: (response: any[]) => {
-
-        console.log('Issues received:', response);
-
-        this.issues = response;
-
-      },
-
-      error: (error: any) => {
-
-        console.error('Error loading issues:', error);
-
-        this.errorMessage = 'Unable to load issues.';
-
-        this.issues = [];
-
-      }
-
-    });
-
-  }
-
-
-  // =========================
-  // COUNT OPEN ISSUES
-  // =========================
-
-  getOpenIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.status === 'OPEN'
-    ).length;
-
-  }
-
-
-  // =========================
-  // COUNT HIGH PRIORITY
-  // =========================
-
-  getHighPriorityIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.priority === 'HIGH'
-    ).length;
-
-  }
-
-
-  // =========================
-  // UPDATE ISSUE STATUS
-  // =========================
-
-  updateStatus(issue: any, status: string): void {
-
-    const updatedIssue = {
-      ...issue,
-      status: status
-    };
-
-    console.log(
-      'Updating issue:',
-      issue.id,
-      updatedIssue
+    return this.http.get<any[]>(
+      `${this.apiUrl}/project/${projectId}`
     );
 
-    this.issueService
-      .updateIssue(issue.id, updatedIssue)
-      .subscribe({
+  }
 
-        next: (response: any) => {
 
-          console.log(
-            'Issue updated successfully:',
-            response
-          );
+  getIssueById(
+    issueId: number
+  ): Observable<any> {
 
-          // Update the issue on screen
-          issue.status = status;
+    return this.http.get<any>(
+      `${this.apiUrl}/${issueId}`
+    );
 
-        },
+  }
 
-        error: (error: any) => {
 
-          console.error(
-            'Error updating issue:',
-            error
-          );
+  updateIssue(
+    issueId: number,
+    issue: any
+  ): Observable<any> {
 
-          this.errorMessage =
-            'Unable to update issue status.';
+    return this.http.put<any>(
+      `${this.apiUrl}/${issueId}`,
+      issue
+    );
 
-        }
+  }
 
-      });
+
+  deleteIssue(
+    issueId: number
+  ): Observable<any> {
+
+    return this.http.delete<any>(
+      `${this.apiUrl}/${issueId}`
+    );
 
   }
 
