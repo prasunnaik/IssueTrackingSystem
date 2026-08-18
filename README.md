@@ -1,494 +1,344 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+package com.its.project.controller;
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
-import { Project } from '../../models/project';
+import java.util.List;
+import java.util.Map;
 
-@Component({
-  selector: 'app-owner-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './owner-dashboard.component.html',
-  styleUrls: ['./owner-dashboard.component.css']
-})
-export class OwnerDashboardComponent implements OnInit {
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
-  // =========================================================
-  // PROJECT
-  // =========================================================
+import com.its.project.model.Project;
+import com.its.project.service.ProjectService;
 
-  project: Project = {
-    id: 3,
-    projectName: 'PMS',
-    projectOwnerId: 1,
-    startDate: '2026-08-10',
-    endDate: '2027-01-31'
-  };
+import jakarta.validation.Valid;
 
-  // =========================================================
-  // ISSUES
-  // =========================================================
+@CrossOrigin(origins = {"http://localhost:4300"})
+@RestController
+@RequestMapping("/api/projects")
+public class ProjectController {
 
-  issues: Issue[] = [];
+    private final ProjectService projectService;
 
-  // =========================================================
-  // FILTER
-  // =========================================================
-
-  selectedFilter: string = 'ALL';
-
-  // =========================================================
-  // ERROR
-  // =========================================================
-
-  errorMessage: string = '';
-
-  // =========================================================
-  // CONSTRUCTOR
-  // =========================================================
-
-  constructor(
-    private issueService: IssueService
-  ) {}
-
-  // =========================================================
-  // INIT
-  // =========================================================
-
-  ngOnInit(): void {
-    this.loadIssues();
-  }
-
-  // =========================================================
-  // LOAD ISSUES
-  // =========================================================
-
-  loadIssues(): void {
-
-    if (this.project.id === undefined || this.project.id === null) {
-      this.errorMessage = 'Project ID is missing.';
-      return;
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
-    this.issueService
-      .getIssuesByProject(this.project.id)
-      .subscribe({
+    @GetMapping
+    public ResponseEntity<List<Project>> getAllProjects() {
 
-        next: (data: Issue[]) => {
+        return new ResponseEntity<>(
+                projectService.getAllProjects(),
+                HttpStatus.OK
+        );
+    }
 
-          this.issues = data || [];
+    @PostMapping
+    public ResponseEntity<Project> createProject(
+            @Valid @RequestBody Project project) {
 
-          this.errorMessage = '';
+        return new ResponseEntity<>(
+                projectService.createProject(project),
+                HttpStatus.CREATED
+        );
+    }
 
-          console.log('Issues loaded:', this.issues);
-        },
+    @GetMapping("/{projectId}")
+    public ResponseEntity<Project> getProjectById(
+            @PathVariable Long projectId) {
 
-        error: (error) => {
+        return new ResponseEntity<>(
+                projectService.getProjectById(projectId),
+                HttpStatus.OK
+        );
+    }
 
-          console.error(
-            'Failed to load issues:',
-            error
-          );
+    @PutMapping("/{projectId}")
+    public ResponseEntity<Project> updateProject(
+            @PathVariable Long projectId,
+            @Valid @RequestBody Project project) {
 
-          this.errorMessage = 'Failed to load issues.';
+        return new ResponseEntity<>(
+                projectService.updateProject(projectId, project),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<Void> deleteProject(
+            @PathVariable Long projectId) {
+
+        projectService.deleteProject(projectId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Project>> getProjectsByOwner(
+            @PathVariable Long ownerId) {
+
+        return new ResponseEntity<>(
+                projectService.getProjectsByOwner(ownerId),
+                HttpStatus.OK
+        );
+    }
+
+    // Inter-service communication by project ID
+    @GetMapping("/{projectId}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getIssuesByProjectId(
+            @PathVariable Long projectId) {
+
+        return new ResponseEntity<>(
+                projectService.getIssuesByProjectId(projectId),
+                HttpStatus.OK
+        );
+    }
+
+    // Inter-service communication by project name
+    @GetMapping("/projectName/{projectName}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getIssuesByProjectName(
+            @PathVariable String projectName) {
+
+        return new ResponseEntity<>(
+                projectService.getIssuesByProjectName(projectName),
+                HttpStatus.OK
+        );
+    }
+}
+
+
+package com.its.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.its.project.model.Project;
+
+public interface ProjectService {
+
+    Project createProject(Project project);
+
+    List<Project> getAllProjects();
+
+    Project getProjectById(Long projectId);
+
+    Project updateProject(Long projectId, Project project);
+
+    void deleteProject(Long projectId);
+
+    List<Project> getProjectsByOwner(Long ownerId);
+
+    List<Map<String, Object>> getIssuesByProjectId(Long projectId);
+
+    List<Map<String, Object>> getIssuesByProjectName(String projectName);
+}
+
+package com.its.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.its.project.client.IssueClient;
+import com.its.project.exception.ProjectNotFoundException;
+import com.its.project.model.Project;
+import com.its.project.repository.ProjectRepository;
+
+@Service
+public class ProjectServiceImpl implements ProjectService {
+
+    private final ProjectRepository projectRepository;
+    private final IssueClient issueClient;
+
+    public ProjectServiceImpl(
+            ProjectRepository projectRepository,
+            IssueClient issueClient) {
+
+        this.projectRepository = projectRepository;
+        this.issueClient = issueClient;
+    }
+
+    @Override
+    public Project createProject(Project project) {
+        return projectRepository.save(project);
+    }
+
+    @Override
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
+
+    @Override
+    public Project getProjectById(Long projectId) {
+
+        return projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+    }
+
+    @Override
+    public Project updateProject(Long projectId, Project project) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        existingProject.setProjectName(project.getProjectName());
+        existingProject.setProductOwnerId(project.getProductOwnerId());
+        existingProject.setStartDate(project.getStartDate());
+        existingProject.setEndDate(project.getEndDate());
+
+        return projectRepository.save(existingProject);
+    }
+
+    @Override
+    public void deleteProject(Long projectId) {
+
+        Project existingProject = projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                    new ProjectNotFoundException(
+                        "Project not found with id: " + projectId
+                    )
+                );
+
+        projectRepository.delete(existingProject);
+    }
+
+    @Override
+    public List<Project> getProjectsByOwner(Long ownerId) {
+        return projectRepository.findByProductOwnerId(ownerId);
+    }
+
+    // Inter-service communication using project ID
+    @Override
+    public List<Map<String, Object>> getIssuesByProjectId(Long projectId) {
+
+        // Verify project exists first
+        getProjectById(projectId);
+
+        return issueClient.getIssuesByProject(projectId);
+    }
+
+    // Inter-service communication using project name
+    @Override
+    public List<Map<String, Object>> getIssuesByProjectName(
+            String projectName) {
+
+        Project project = projectRepository.findByProjectName(projectName);
+
+        if (project == null) {
+            throw new ProjectNotFoundException(
+                "Project not found with name: " + projectName
+            );
         }
 
-      });
-  }
+        return issueClient.getIssuesByProject(project.getId());
+    }
+}
 
-  // =========================================================
-  // REFRESH DASHBOARD
-  // =========================================================
+package com.its.project.model;
 
-  refreshDashboard(): void {
-    this.loadIssues();
-  }
+import java.time.LocalDate;
 
-  // =========================================================
-  // FILTER
-  // =========================================================
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-  filterIssues(filter: string): void {
-    this.selectedFilter = filter;
-  }
+@Entity
+@Table(name = "projects")
+public class Project {
 
-  get filteredIssues(): Issue[] {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    if (this.selectedFilter === 'ALL') {
-      return this.issues;
+    @NotBlank(message = "Project name is required")
+    private String projectName;
+
+    @NotNull(message = "Product owner ID is required")
+    private Long productOwnerId;
+
+    @NotNull(message = "Start date is required")
+    private LocalDate startDate;
+
+    @NotNull(message = "End date is required")
+    private LocalDate endDate;
+
+    public Project() {
     }
 
-    if (this.selectedFilter === 'OPEN') {
-      return this.issues.filter(
-        issue => issue.status === 'OPEN'
-      );
+    public Long getId() {
+        return id;
     }
 
-    if (this.selectedFilter === 'IN_PROGRESS') {
-      return this.issues.filter(
-        issue => issue.status === 'IN_PROGRESS'
-      );
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    if (this.selectedFilter === 'HIGH') {
-      return this.issues.filter(
-        issue => issue.priority === 'HIGH'
-      );
+    public String getProjectName() {
+        return projectName;
     }
 
-    if (this.selectedFilter === 'MEDIUM') {
-      return this.issues.filter(
-        issue => issue.priority === 'MEDIUM'
-      );
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
-    if (this.selectedFilter === 'CLOSED') {
-      return this.issues.filter(
-        issue => issue.status === 'CLOSED'
-      );
+    public Long getProductOwnerId() {
+        return productOwnerId;
     }
 
-    return this.issues;
-  }
-
-  // =========================================================
-  // DASHBOARD COUNTS
-  // =========================================================
-
-  getTotalIssues(): number {
-    return this.issues.length;
-  }
-
-  getOpenIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.status === 'OPEN'
-    ).length;
-
-  }
-
-  getHighPriorityIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.priority === 'HIGH'
-    ).length;
-
-  }
-
-  getInProgressIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    ).length;
-
-  }
-
-  getClosedIssues(): number {
-
-    return this.issues.filter(
-      issue => issue.status === 'CLOSED'
-    ).length;
-
-  }
-
-  // =========================================================
-  // UPDATE STATUS
-  // =========================================================
-
-  updateStatus(
-    issue: Issue,
-    event: Event
-  ): void {
-
-    if (
-      issue.id === undefined ||
-      issue.id === null
-    ) {
-      alert('Issue ID is missing.');
-      return;
+    public void setProductOwnerId(Long productOwnerId) {
+        this.productOwnerId = productOwnerId;
     }
 
-    const select =
-      event.target as HTMLSelectElement;
-
-    const status = select.value;
-
-    if (!status) {
-      alert('Please select a valid status.');
-      return;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    console.log(
-      'Updating status:',
-      issue.id,
-      status
-    );
-
-    this.issueService
-      .updateIssueStatus(
-        issue.id,
-        status
-      )
-      .subscribe({
-
-        next: (updatedIssue: Issue) => {
-
-          issue.status =
-            updatedIssue.status;
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Failed to update issue status:',
-            error
-          );
-
-          alert(
-            'Failed to update issue status.'
-          );
-
-        }
-
-      });
-  }
-
-  // =========================================================
-  // UPDATE PRIORITY
-  // =========================================================
-
-  updatePriority(
-    issue: Issue,
-    event: Event
-  ): void {
-
-    if (
-      issue.id === undefined ||
-      issue.id === null
-    ) {
-      alert('Issue ID is missing.');
-      return;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
     }
 
-    const select =
-      event.target as HTMLSelectElement;
-
-    const priority = select.value;
-
-    if (!priority) {
-      alert('Please select a valid priority.');
-      return;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
-    console.log(
-      'Updating priority:',
-      issue.id,
-      priority
-    );
-
-    this.issueService
-      .updateIssuePriority(
-        issue.id,
-        priority
-      )
-      .subscribe({
-
-        next: (updatedIssue: Issue) => {
-
-          issue.priority =
-            updatedIssue.priority;
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Failed to update issue priority:',
-            error
-          );
-
-          alert(
-            'Failed to update issue priority.'
-          );
-
-        }
-
-      });
-  }
-
-  // =========================================================
-  // UPDATE ASSIGNEE
-  // =========================================================
-
-  updateAssignee(
-    issue: Issue,
-    event: Event
-  ): void {
-
-    // Check issue ID
-    if (
-      issue.id === undefined ||
-      issue.id === null
-    ) {
-      alert('Issue ID is missing.');
-      return;
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
+}
 
-    const select =
-      event.target as HTMLSelectElement;
+package com.its.project.repository;
 
-    /*
-     * Angular [ngValue] can produce an internal
-     * select value such as:
-     *
-     * 0: 1
-     * 1: 2
-     * 2: 3
-     * 3: 4
-     *
-     * Therefore Number(select.value) directly
-     * can produce NaN.
-     */
+import java.util.List;
 
-    const rawValue = select.value;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    console.log(
-      'Raw assignee value:',
-      rawValue
-    );
+import com.its.project.model.Project;
 
-    let assigneeId: number;
+public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-    // Handle Angular [ngValue]
-    if (rawValue.includes(':')) {
+    List<Project> findByProductOwnerId(Long ownerId);
 
-      const parts =
-        rawValue.split(':');
-
-      const lastPart =
-        parts[parts.length - 1].trim();
-
-      assigneeId =
-        Number(lastPart);
-
-    } else {
-
-      // Handle normal value="4"
-      assigneeId =
-        Number(rawValue);
-
-    }
-
-    console.log(
-      'Parsed assignee ID:',
-      assigneeId
-    );
-
-    // Validate
-    if (
-      !Number.isInteger(assigneeId) ||
-      assigneeId <= 0
-    ) {
-
-      alert(
-        'Please select a valid assignee.'
-      );
-
-      return;
-    }
-
-    console.log(
-      'Updating assignee:',
-      issue.id,
-      assigneeId
-    );
-
-    // Call backend
-    this.issueService
-      .updateIssueAssignee(
-        issue.id,
-        assigneeId
-      )
-      .subscribe({
-
-        next: (updatedIssue: Issue) => {
-
-          console.log(
-            'Assignee updated successfully:',
-            updatedIssue
-          );
-
-          issue.assigneeId =
-            updatedIssue.assigneeId;
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Failed to update issue assignee:',
-            error
-          );
-
-          alert(
-            'Failed to update issue assignee.'
-          );
-
-        }
-
-      });
-  }
-
-  // =========================================================
-  // STATUS CSS CLASS
-  // =========================================================
-
-  getStatusClass(
-    status: string
-  ): string {
-
-    if (status === 'OPEN') {
-      return 'open';
-    }
-
-    if (status === 'IN_PROGRESS') {
-      return 'progress';
-    }
-
-    if (status === 'CLOSED') {
-      return 'closed';
-    }
-
-    return '';
-  }
-
-  // =========================================================
-  // PRIORITY CSS CLASS
-  // =========================================================
-
-  getPriorityClass(
-    priority: string
-  ): string {
-
-    if (priority === 'HIGH') {
-      return 'high';
-    }
-
-    if (priority === 'MEDIUM') {
-      return 'medium';
-    }
-
-    if (priority === 'LOW') {
-      return 'low';
-    }
-
-    return '';
-  }
-
+    Project findByProjectName(String projectName);
 }
