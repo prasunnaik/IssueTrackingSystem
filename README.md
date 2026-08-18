@@ -1,94 +1,3 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class IssueService {
-
-  private apiUrl = 'http://localhost:8083/api/issues';
-
-  constructor(
-    private http: HttpClient
-  ) {}
-
-  getIssuesByProject(
-    projectId: number
-  ): Observable<any[]> {
-
-    return this.http.get<any[]>(
-      `${this.apiUrl}/project/${projectId}`
-    );
-
-  }
-
-
-  getIssueById(
-    issueId: number
-  ): Observable<any> {
-
-    return this.http.get<any>(
-      `${this.apiUrl}/${issueId}`
-    );
-
-  }
-
-
-  updateIssue(
-    issueId: number,
-    issue: any
-  ): Observable<any> {
-
-    return this.http.put<any>(
-      `${this.apiUrl}/${issueId}`,
-      issue
-    );
-
-  }
-
-
-  deleteIssue(
-    issueId: number
-  ): Observable<any> {
-
-    return this.http.delete<any>(
-      `${this.apiUrl}/${issueId}`
-    );
-
-  }
-
-  updateIssueStatus(issueId: number, status: string): Observable<any> {
-  return this.http.put(
-    `${this.apiUrl}/${issueId}/status`,
-    { status: status }
-  );
-}
-
-  updateIssuePriority(
-  issueId: number,
-  priority: string
-): Observable<any> {
-
-  return this.http.put(
-    `${this.apiUrl}/${issueId}/priority`,
-    { priority: priority }
-  );
-} 
-
-  updateIssueAssignee(
-  issueId: number,
-  assigneeId: number
-): Observable<any> {
-
-  return this.http.put<any>(
-    `${this.apiUrl}/${issueId}/assignee/${assigneeId}`,
-    {}
-  );
-}
-
-}
-
 package com.its.issue.controller;
 
 import java.util.List;
@@ -106,13 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.its.issue.model.Issue;
 import com.its.issue.service.IssueService;
 
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "hjttp://localhost:4300")
+@CrossOrigin(origins = "http://localhost:4300")
 @RestController
 @RequestMapping("/api/issues")
 public class IssueController {
@@ -207,47 +115,48 @@ public class IssueController {
     }
 
     @PutMapping("/{issueId}/status")
-public ResponseEntity<Issue> updateIssueStatus(
-        @PathVariable Long issueId,
-        @RequestBody Map<String, String> request) {
+    public ResponseEntity<Issue> updateIssueStatus(
+            @PathVariable Long issueId,
+            @RequestBody Map<String, String> request) {
 
-    String status = request.get("status");
+        String status = request.get("status");
 
-    Issue updatedIssue =
-            issueService.updateIssueStatus(issueId, status);
+        Issue updatedIssue =
+                issueService.updateIssueStatus(issueId, status);
 
-    return new ResponseEntity<>(
-            updatedIssue,
-            HttpStatus.OK
-    );
-}
+        return new ResponseEntity<>(
+                updatedIssue,
+                HttpStatus.OK
+        );
+    }
 
-@PutMapping("/{issueId}/priority")
-public ResponseEntity<Issue> updateIssuePriority(
-        @PathVariable Long issueId,
-        @RequestBody Map<String, String> request) {
+    @PutMapping("/{issueId}/priority")
+    public ResponseEntity<Issue> updateIssuePriority(
+            @PathVariable Long issueId,
+            @RequestBody Map<String, String> request) {
 
-    String priority = request.get("priority");
+        String priority = request.get("priority");
 
-    Issue updatedIssue =
-            issueService.updateIssuePriority(issueId, priority);
+        Issue updatedIssue =
+                issueService.updateIssuePriority(issueId, priority);
 
-    return new ResponseEntity<>(
-            updatedIssue,
-            HttpStatus.OK
-    );
-}
+        return new ResponseEntity<>(
+                updatedIssue,
+                HttpStatus.OK
+        );
+    }
 
-@PutMapping("/{issueId}/assignee/{assigneeId}")
-public ResponseEntity<Issue> updateIssueAssignee(
-        @PathVariable Long issueId,
-        @PathVariable Long assigneeId) {
+    @PutMapping("/{issueId}/assignee/{assigneeId}")
+    public ResponseEntity<Issue> updateIssueAssignee(
+            @PathVariable Long issueId,
+            @PathVariable Long assigneeId) {
 
-    return new ResponseEntity<>(
-            issueService.updateIssueAssignee(issueId, assigneeId),
-            HttpStatus.OK
-    );
-}
+        Issue updatedIssue =
+                issueService.updateIssueAssignee(issueId, assigneeId);
 
-
+        return new ResponseEntity<>(
+                updatedIssue,
+                HttpStatus.OK
+        );
+    }
 }
