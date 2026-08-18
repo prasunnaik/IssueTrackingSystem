@@ -1,117 +1,168 @@
-export interface Issue {
-  id?: number;
-  projectId?: number;
-  assigneeId?: number;
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 
-  summary: string;
-  description: string;
-
-  status: string;
-  priority: string;
-  type: string;
-
-  storyPoint: number;
-
-  sprint?: string;
-  tags?: string;
-
-  createdDate?: string;
-  lastUpdatedDate?: string;
-}
-
-import { Component } from '@angular/core';
+import { IssueService } from '../../services/issue.service';
+import { Issue } from '../../models/issue';
 
 @Component({
   selector: 'app-issue-details',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './issue-details.component.html',
   styleUrl: './issue-details.component.css'
 })
-export class IssueDetailsComponent {
+export class IssueDetailsComponent implements OnInit {
 
-}
+  issue: Issue | null = null;
 
-<p>issue-details works!</p>
+  loading: boolean = true;
+  errorMessage: string = '';
 
-import { Component } from '@angular/core';
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private issueService: IssueService
+  ) {}
 
-@Component({
-  selector: 'app-edit-issue',
-  imports: [],
-  templateUrl: './edit-issue.component.html',
-  styleUrl: './edit-issue.component.css'
-})
-export class EditIssueComponent {
+  ngOnInit(): void {
 
-}
+    const id = Number(
+      this.route.snapshot.paramMap.get('id')
+    );
 
-<p>edit-issue works!</p>
+    if (!id) {
+      this.errorMessage = 'Invalid issue ID.';
+      this.loading = false;
+      return;
+    }
 
-import { Routes } from '@angular/router';
-import { CreateIssueComponent } from './components/create-issue/create-issue.component';
-
-export const routes: Routes = [
-  {
-    path: 'create-issue',
-    component: CreateIssueComponent
-  },
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./components/login/login.component')
-        .then(m => m.LoginComponent)
-  },
-  {
-    path: 'signup',
-    loadComponent: () =>
-      import('./components/signup/signup.component')
-        .then(m => m.SignupComponent)
-  },
-  {
-    path: 'owner-dashboard',
-    loadComponent: () =>
-      import('./components/owner-dashboard/owner-dashboard.component')
-        .then(m => m.OwnerDashboardComponent)
-  },
-  {
-    path: 'create-project',
-    loadComponent: () =>
-      import('./components/create-project/create-project.component')
-        .then(m => m.CreateProjectComponent)
-  },
-  {
-    path: 'create-issue',
-    loadComponent: () =>
-      import('./components/create-issue/create-issue.component')
-        .then(m => m.CreateIssueComponent)
-  },
-  {
-    path: 'issue/:id',
-    loadComponent: () =>
-      import('./components/issue-details/issue-details.component')
-        .then(m => m.IssueDetailsComponent)
-  },
-  {
-    path: 'edit-issue/:id',
-    loadComponent: () =>
-      import('./components/edit-issue/edit-issue.component')
-        .then(m => m.EditIssueComponent)
-  },
-  {
-    path: 'assignee-dashboard',
-    loadComponent: () =>
-      import('./components/assignee-dashboard/assignee-dashboard.component')
-        .then(m => m.AssigneeDashboardComponent)
-  },
-  {
-    path: 'assignee-issue/:id',
-    loadComponent: () =>
-      import('./components/assignee-issue-details/assignee-issue-details.component')
-        .then(m => m.AssigneeIssueDetailsComponent)
+    this.loadIssue(id);
   }
-];
+
+  loadIssue(issueId: number): void {
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.issueService
+      .getIssueById(issueId)
+      .subscribe({
+
+        next: (data: Issue) => {
+
+          this.issue = data;
+          this.loading = false;
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Failed to load issue:',
+            error
+          );
+
+          this.errorMessage =
+            'Failed to load issue details.';
+
+          this.loading = false;
+        }
+      });
+  }
+
+  editIssue(): void {
+
+    if (!this.issue?.id) {
+      return;
+    }
+
+    this.router.navigate([
+      '/edit-issue',
+      this.issue.id
+    ]);
+  }
+
+  deleteIssue(): void {
+
+    if (!this.issue?.id) {
+      return;
+    }
+
+    const confirmed = confirm(
+      'Are you sure you want to delete this issue?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.issueService
+      .deleteIssue(this.issue.id)
+      .subscribe({
+
+        next: () => {
+
+          alert('Issue deleted successfully.');
+
+          this.router.navigate([
+            '/owner-dashboard'
+          ]);
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Failed to delete issue:',
+            error
+          );
+
+          alert(
+            'Failed to delete issue.'
+          );
+        }
+      });
+  }
+
+  goBack(): void {
+
+    this.router.navigate([
+      '/owner-dashboard'
+    ]);
+  }
+
+  getStatusClass(status: string): string {
+
+    if (status === 'OPEN') {
+      return 'open';
+    }
+
+    if (status === 'IN_PROGRESS') {
+      return 'progress';
+    }
+
+    if (status === 'CLOSED') {
+      return 'closed';
+    }
+
+    return '';
+  }
+
+  getPriorityClass(priority: string): string {
+
+    if (priority === 'HIGH') {
+      return 'high';
+    }
+
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
+
+    if (priority === 'LOW') {
+      return 'low';
+    }
+
+    return '';
+  }
+}
