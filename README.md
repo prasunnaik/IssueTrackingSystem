@@ -1,488 +1,526 @@
-<div class="dashboard">
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
-  <!-- ============================================ -->
-  <!-- HEADER -->
-  <!-- ============================================ -->
+import { IssueService } from '../../services/issue.service';
+import { ProjectService } from '../../services/project.service';
 
-  <div class="dashboard-header">
+import { Issue } from '../../models/issue';
+import { Project } from '../../models/project';
 
-    <div>
-      <h1>Project Owner Dashboard</h1>
+@Component({
+  selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
+})
+export class OwnerDashboardComponent implements OnInit {
 
-      <p class="subtitle">
-        Manage your projects and track issues
-      </p>
-    </div>
+  // =========================================================
+  // OWNER
+  // =========================================================
 
-    <button
-      class="refresh-btn"
-      type="button"
-      (click)="refreshDashboard()">
+  // Change this when login/authentication is implemented
+  ownerId: number = 1;
 
-      Refresh
 
-    </button>
+  // =========================================================
+  // PROJECTS
+  // =========================================================
 
-  </div>
+  projects: Project[] = [];
 
+  selectedProject: Project | null = null;
 
-  <!-- ============================================ -->
-  <!-- ERROR -->
-  <!-- ============================================ -->
 
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
+  // =========================================================
+  // ISSUES
+  // =========================================================
 
-    {{ errorMessage }}
+  issues: Issue[] = [];
 
-  </div>
 
+  // =========================================================
+  // FILTER
+  // =========================================================
 
-  <!-- ============================================ -->
-  <!-- NO PROJECTS -->
-  <!-- ============================================ -->
+  selectedFilter: string = 'ALL';
 
-  <div
-    class="empty-message"
-    *ngIf="projects.length === 0 && !errorMessage">
 
-    No projects found.
+  // =========================================================
+  // ERROR
+  // =========================================================
 
-  </div>
+  errorMessage: string = '';
 
 
-  <!-- ============================================ -->
-  <!-- PROJECT SELECTOR -->
-  <!-- ============================================ -->
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
 
-  <div
-    class="project-selector"
-    *ngIf="projects.length > 0">
+  constructor(
+    private projectService: ProjectService,
+    private issueService: IssueService,
+    private router: Router
+  ) {}
 
-    <label for="projectSelect">
-      Select Project:
-    </label>
 
-    <select
-      id="projectSelect"
-      [ngModel]="selectedProject"
-      (ngModelChange)="selectProject($event)">
+  // =========================================================
+  // INIT
+  // =========================================================
 
-      <option
-        *ngFor="let project of projects"
-        [ngValue]="project">
+  ngOnInit(): void {
+    this.loadProjects();
+  }
 
-        {{ project.projectName }}
 
-      </option>
+  // =========================================================
+  // LOAD PROJECTS
+  // =========================================================
 
-    </select>
+  loadProjects(): void {
 
-  </div>
+    this.errorMessage = '';
 
+    this.projectService
+      .getProjectsByOwner(this.ownerId)
+      .subscribe({
 
-  <!-- ============================================ -->
-  <!-- SELECTED PROJECT -->
-  <!-- ============================================ -->
+        next: (data: Project[]) => {
 
-  <div
-    class="project-card"
-    *ngIf="selectedProject">
+          this.projects = data || [];
 
+          if (this.projects.length > 0) {
 
-    <!-- PROJECT HEADER -->
+            // Select first project automatically
+            this.selectedProject = this.projects[0];
 
-    <div class="project-header">
+            this.loadIssues();
 
-      <div>
+          } else {
 
-        <h2>
-          {{ selectedProject.projectName }}
-        </h2>
+            this.selectedProject = null;
+            this.issues = [];
+          }
+        },
 
-        <p>
-          <strong>Project ID:</strong>
-          {{ selectedProject.id }}
-        </p>
+        error: (error: any) => {
 
-        <p>
-          <strong>Owner ID:</strong>
-          {{ selectedProject.productOwnerId }}
-        </p>
+          console.error(
+            'Failed to load projects:',
+            error
+          );
 
-      </div>
+          this.errorMessage =
+            'Failed to load projects.';
 
+          this.projects = [];
+          this.selectedProject = null;
+          this.issues = [];
+        }
+      });
+  }
 
-      <div class="project-dates">
 
-        <p>
-          <strong>Start:</strong>
-          {{ selectedProject.startDate }}
-        </p>
+  // =========================================================
+  // SELECT PROJECT
+  // =========================================================
 
-        <p>
-          <strong>End:</strong>
-          {{ selectedProject.endDate }}
-        </p>
+  selectProject(project: Project): void {
 
-      </div>
+    this.selectedProject = project;
 
-    </div>
+    this.selectedFilter = 'ALL';
 
+    this.issues = [];
 
-    <!-- ========================================== -->
-    <!-- STATISTICS -->
-    <!-- ========================================== -->
+    this.errorMessage = '';
 
-    <div class="stats">
+    this.loadIssues();
+  }
 
 
-      <div class="stat-card">
+  // =========================================================
+  // LOAD ISSUES FOR SELECTED PROJECT
+  // =========================================================
 
-        <div class="stat-number">
-          {{ getTotalIssues() }}
-        </div>
+  loadIssues(): void {
 
-        <div class="stat-label">
-          Total Issues
-        </div>
+    if (
+      !this.selectedProject ||
+      this.selectedProject.id === undefined
+    ) {
 
-      </div>
+      this.issues = [];
 
+      return;
+    }
 
-      <div class="stat-card">
+    const projectId = this.selectedProject.id;
 
-        <div class="stat-number">
-          {{ getOpenIssues() }}
-        </div>
+    this.issueService
+      .getIssuesByProject(projectId)
+      .subscribe({
 
-        <div class="stat-label">
-          Open Issues
-        </div>
+        next: (data: Issue[]) => {
 
-      </div>
+          this.issues = data || [];
 
+          this.errorMessage = '';
+        },
 
-      <div class="stat-card">
+        error: (error: any) => {
 
-        <div class="stat-number">
-          {{ getHighPriorityIssues() }}
-        </div>
+          console.error(
+            'Failed to load issues:',
+            error
+          );
 
-        <div class="stat-label">
-          High Priority
-        </div>
+          this.issues = [];
 
-      </div>
+          this.errorMessage =
+            'Failed to load issues.';
+        }
+      });
+  }
 
 
-      <div class="stat-card">
+  // =========================================================
+  // REFRESH
+  // =========================================================
 
-        <div class="stat-number">
-          {{ getInProgressIssues() }}
-        </div>
+  refreshDashboard(): void {
 
-        <div class="stat-label">
-          In Progress
-        </div>
+    this.loadProjects();
+  }
 
-      </div>
 
+  // =========================================================
+  // CREATE PROJECT
+  // =========================================================
 
-      <div class="stat-card">
+  createProject(): void {
 
-        <div class="stat-number">
-          {{ getClosedIssues() }}
-        </div>
+    this.router.navigate([
+      '/create-project'
+    ]);
+  }
 
-        <div class="stat-label">
-          Closed
-        </div>
 
-      </div>
+  // =========================================================
+  // FILTER
+  // =========================================================
 
-    </div>
+  filterIssues(filter: string): void {
 
+    this.selectedFilter = filter;
+  }
 
-    <!-- ========================================== -->
-    <!-- FILTER BUTTONS -->
-    <!-- ========================================== -->
 
-    <div class="filters">
+  // =========================================================
+  // FILTERED ISSUES
+  // =========================================================
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'ALL'"
-        (click)="filterIssues('ALL')">
+  get filteredIssues(): Issue[] {
 
-        All
+    if (this.selectedFilter === 'ALL') {
+      return this.issues;
+    }
 
-      </button>
+    if (this.selectedFilter === 'OPEN') {
 
+      return this.issues.filter(
+        issue => issue.status === 'OPEN'
+      );
+    }
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'OPEN'"
-        (click)="filterIssues('OPEN')">
+    if (this.selectedFilter === 'IN_PROGRESS') {
 
-        Open
+      return this.issues.filter(
+        issue => issue.status === 'IN_PROGRESS'
+      );
+    }
 
-      </button>
+    if (this.selectedFilter === 'HIGH') {
 
+      return this.issues.filter(
+        issue => issue.priority === 'HIGH'
+      );
+    }
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'IN_PROGRESS'"
-        (click)="filterIssues('IN_PROGRESS')">
+    if (this.selectedFilter === 'MEDIUM') {
 
-        In Progress
+      return this.issues.filter(
+        issue => issue.priority === 'MEDIUM'
+      );
+    }
 
-      </button>
+    if (this.selectedFilter === 'CLOSED') {
 
+      return this.issues.filter(
+        issue => issue.status === 'CLOSED'
+      );
+    }
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'HIGH'"
-        (click)="filterIssues('HIGH')">
+    return this.issues;
+  }
 
-        High Priority
 
-      </button>
+  // =========================================================
+  // STATISTICS
+  // =========================================================
 
+  getTotalIssues(): number {
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'MEDIUM'"
-        (click)="filterIssues('MEDIUM')">
+    return this.issues.length;
+  }
 
-        Medium
 
-      </button>
+  getOpenIssues(): number {
 
+    return this.issues.filter(
+      issue => issue.status === 'OPEN'
+    ).length;
+  }
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'CLOSED'"
-        (click)="filterIssues('CLOSED')">
 
-        Closed
+  getHighPriorityIssues(): number {
 
-      </button>
+    return this.issues.filter(
+      issue => issue.priority === 'HIGH'
+    ).length;
+  }
 
-    </div>
 
+  getInProgressIssues(): number {
 
-    <!-- ========================================== -->
-    <!-- ISSUES -->
-    <!-- ========================================== -->
+    return this.issues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    ).length;
+  }
 
-    <div class="issues-section">
 
-      <h2>
-        Issues
-      </h2>
+  getClosedIssues(): number {
 
+    return this.issues.filter(
+      issue => issue.status === 'CLOSED'
+    ).length;
+  }
 
-      <div
-        class="no-issues"
-        *ngIf="filteredIssues.length === 0">
 
-        No issues found for this project.
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
 
-      </div>
+  updateStatus(
+    issue: Issue,
+    event: Event
+  ): void {
 
+    if (issue.id === undefined) {
 
-      <!-- ======================================== -->
-      <!-- ISSUE CARD -->
-      <!-- ======================================== -->
+      alert('Issue ID is missing.');
 
-      <div
-        class="issue-card"
-        *ngFor="let issue of filteredIssues">
+      return;
+    }
 
+    const select =
+      event.target as HTMLSelectElement;
 
-        <!-- ISSUE HEADER -->
+    const status = select.value;
 
-        <div class="issue-top">
+    this.issueService
+      .updateIssueStatus(
+        issue.id,
+        status
+      )
+      .subscribe({
 
-          <div>
+        next: (updatedIssue: Issue) => {
 
-            <h3>
-              {{ issue.summary }}
-            </h3>
+          issue.status =
+            updatedIssue.status;
+        },
 
-            <p class="issue-id">
-              Issue ID:
-              {{ issue.id }}
-            </p>
+        error: (error: any) => {
 
-          </div>
+          console.error(
+            'Failed to update issue status:',
+            error
+          );
 
+          alert(
+            'Failed to update issue status.'
+          );
 
-          <span
-            class="status-badge"
-            [ngClass]="
-              getStatusClass(issue.status)
-            ">
+          // Reload to restore actual value
+          this.loadIssues();
+        }
+      });
+  }
 
-            {{ issue.status }}
 
-          </span>
+  // =========================================================
+  // UPDATE PRIORITY
+  // =========================================================
 
-        </div>
+  updatePriority(
+    issue: Issue,
+    event: Event
+  ): void {
 
+    if (issue.id === undefined) {
 
-        <!-- DESCRIPTION -->
+      alert('Issue ID is missing.');
 
-        <p class="description">
+      return;
+    }
 
-          <strong>Description:</strong>
+    const select =
+      event.target as HTMLSelectElement;
 
-          {{ issue.description }}
+    const priority = select.value;
 
-        </p>
+    this.issueService
+      .updateIssuePriority(
+        issue.id,
+        priority
+      )
+      .subscribe({
 
+        next: (updatedIssue: Issue) => {
 
-        <!-- ====================================== -->
-        <!-- ISSUE DETAILS -->
-        <!-- ====================================== -->
+          issue.priority =
+            updatedIssue.priority;
+        },
 
-        <div class="issue-details">
+        error: (error: any) => {
 
+          console.error(
+            'Failed to update issue priority:',
+            error
+          );
 
-          <!-- PRIORITY -->
+          alert(
+            'Failed to update issue priority.'
+          );
 
-          <span>
+          this.loadIssues();
+        }
+      });
+  }
 
-            <strong>Priority:</strong>
 
-            <select
-              [ngModel]="issue.priority"
-              (change)="
-                updatePriority(
-                  issue,
-                  $event
-                )
-              ">
+  // =========================================================
+  // UPDATE ASSIGNEE
+  // =========================================================
 
-              <option value="HIGH">
-                HIGH
-              </option>
+  updateAssignee(
+    issue: Issue,
+    event: Event
+  ): void {
 
-              <option value="MEDIUM">
-                MEDIUM
-              </option>
+    if (issue.id === undefined) {
 
-              <option value="LOW">
-                LOW
-              </option>
+      alert('Issue ID is missing.');
 
-            </select>
+      return;
+    }
 
-          </span>
+    const select =
+      event.target as HTMLSelectElement;
 
+    const assigneeId =
+      Number(select.value);
 
-          <!-- TYPE -->
+    if (!assigneeId) {
 
-          <span>
+      alert(
+        'Please select a valid assignee.'
+      );
 
-            <strong>Type:</strong>
+      return;
+    }
 
-            {{ issue.type }}
+    this.issueService
+      .updateIssueAssignee(
+        issue.id,
+        assigneeId
+      )
+      .subscribe({
 
-          </span>
+        next: (updatedIssue: Issue) => {
 
+          issue.assigneeId =
+            updatedIssue.assigneeId;
+        },
 
-          <!-- ASSIGNEE -->
+        error: (error: any) => {
 
-          <span>
+          console.error(
+            'Failed to update issue assignee:',
+            error
+          );
 
-            <strong>Assignee:</strong>
+          alert(
+            'Failed to update issue assignee.'
+          );
 
-            <select
-              [ngModel]="issue.assigneeId"
-              (change)="
-                updateAssignee(
-                  issue,
-                  $event
-                )
-              ">
+          this.loadIssues();
+        }
+      });
+  }
 
-              <option value="1">
-                1
-              </option>
 
-              <option value="2">
-                2
-              </option>
+  // =========================================================
+  // STATUS CSS CLASS
+  // =========================================================
 
-              <option value="3">
-                3
-              </option>
+  getStatusClass(
+    status: string
+  ): string {
 
-              <option value="4">
-                4
-              </option>
+    if (status === 'OPEN') {
+      return 'open';
+    }
 
-            </select>
+    if (status === 'IN_PROGRESS') {
+      return 'progress';
+    }
 
-          </span>
+    if (status === 'CLOSED') {
+      return 'closed';
+    }
 
+    return '';
+  }
 
-          <!-- STORY POINTS -->
 
-          <span>
+  // =========================================================
+  // PRIORITY CSS CLASS
+  // =========================================================
 
-            <strong>Story Points:</strong>
+  getPriorityClass(
+    priority: string
+  ): string {
 
-            {{ issue.storyPoint }}
+    if (priority === 'HIGH') {
+      return 'high';
+    }
 
-          </span>
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
 
-        </div>
+    if (priority === 'LOW') {
+      return 'low';
+    }
 
-
-        <!-- ====================================== -->
-        <!-- STATUS UPDATE -->
-        <!-- ====================================== -->
-
-        <div class="status-update">
-
-          <label>
-            Update Status:
-          </label>
-
-          <select
-            [ngModel]="issue.status"
-            (change)="
-              updateStatus(
-                issue,
-                $event
-              )
-            ">
-
-            <option value="OPEN">
-              OPEN
-            </option>
-
-            <option value="IN_PROGRESS">
-              IN_PROGRESS
-            </option>
-
-            <option value="CLOSED">
-              CLOSED
-            </option>
-
-          </select>
-
-        </div>
-
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
+    return '';
+  }
+}
