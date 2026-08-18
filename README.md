@@ -1,231 +1,178 @@
-<div class="issue-details-page">
-
-  <div class="page-header">
-
-    <div>
-      <h1>Issue Details</h1>
-
-      <p>
-        View complete information about the issue.
-      </p>
-    </div>
-
-    <button
-      type="button"
-      class="back-button"
-      (click)="goBack()">
-
-      Back to Dashboard
-
-    </button>
-
-  </div>
-
-
-  <!-- Loading -->
-
-  <div
-    class="loading"
-    *ngIf="loading">
-
-    Loading issue details...
-
-  </div>
-
-
-  <!-- Error -->
-
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
-
-    {{ errorMessage }}
-
-  </div>
-
-
-  <!-- Issue -->
-
-  <div
-    class="issue-card"
-    *ngIf="issue && !loading">
-
-
-    <!-- HEADER -->
-
-    <div class="issue-header">
-
-      <div>
-
-        <h2>
-          {{ issue.summary }}
-        </h2>
-
-        <p class="issue-id">
-          Issue ID: {{ issue.id }}
-        </p>
-
-      </div>
-
-
-      <span
-        class="status-badge"
-        [ngClass]="getStatusClass(issue.status)">
-
-        {{ issue.status }}
-
-      </span>
-
-    </div>
-
-
-    <!-- DESCRIPTION -->
-
-    <div class="section">
-
-      <h3>Description</h3>
-
-      <p>
-        {{ issue.description }}
-      </p>
-
-    </div>
-
-
-    <!-- DETAILS -->
-
-    <div class="details-grid">
-
-      <div class="detail">
-
-        <strong>Project ID</strong>
-
-        <span>
-          {{ issue.projectId }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Type</strong>
-
-        <span>
-          {{ issue.type }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Priority</strong>
-
-        <span
-          class="priority"
-          [ngClass]="getPriorityClass(issue.priority)">
-
-          {{ issue.priority }}
-
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Assignee</strong>
-
-        <span>
-          {{ issue.assigneeId }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Sprint</strong>
-
-        <span>
-          {{ issue.sprint || 'Not specified' }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Story Point</strong>
-
-        <span>
-          {{ issue.storyPoint }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Tags</strong>
-
-        <span>
-          {{ issue.tags || 'No tags' }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Created Date</strong>
-
-        <span>
-          {{ issue.createdDate || 'Not available' }}
-        </span>
-
-      </div>
-
-
-      <div class="detail">
-
-        <strong>Last Updated</strong>
-
-        <span>
-          {{ issue.lastUpdatedDate || 'Not available' }}
-        </span>
-
-      </div>
-
-    </div>
-
-
-    <!-- ACTIONS -->
-
-    <div class="actions">
-
-      <button
-        type="button"
-        class="edit-button"
-        (click)="editIssue()">
-
-        Edit Issue
-
-      </button>
-
-
-      <button
-        type="button"
-        class="delete-button"
-        (click)="deleteIssue()">
-
-        Delete Issue
-
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
+.issue-details-page {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #222;
+}
+
+.page-header p {
+  color: #666;
+}
+
+.back-button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 5px;
+  background: #555;
+  color: white;
+  cursor: pointer;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+}
+
+.error-message {
+  padding: 15px;
+  margin-bottom: 20px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 5px;
+}
+
+.issue-card {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
+}
+
+.issue-header h2 {
+  margin: 0 0 8px;
+}
+
+.issue-id {
+  color: #777;
+}
+
+.status-badge {
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.status-badge.open {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge.progress {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-badge.closed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.section {
+  margin-top: 25px;
+}
+
+.section h3 {
+  margin-bottom: 8px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.detail strong {
+  color: #555;
+}
+
+.priority.high {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.priority.medium {
+  color: #ef6c00;
+  font-weight: bold;
+}
+
+.priority.low {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+.edit-button,
+.delete-button {
+  padding: 11px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.edit-button {
+  background: #1976d2;
+  color: white;
+}
+
+.delete-button {
+  background: #d32f2f;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #125ca1;
+}
+
+.delete-button:hover {
+  background: #b71c1c;
+}
+
+@media (max-width: 700px) {
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
