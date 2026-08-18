@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue';
 import { Project } from '../../models/project';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-owner-dashboard',
@@ -17,7 +18,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class OwnerDashboardComponent implements OnInit {
 
-  // Project currently displayed
+  // =========================================================
+  // PROJECT
+  // =========================================================
+
   project: Project = {
     id: 3,
     projectName: 'PMS',
@@ -26,18 +30,35 @@ export class OwnerDashboardComponent implements OnInit {
     endDate: '2027-01-31'
   };
 
-  // Issues belonging to the project
+  // =========================================================
+  // ISSUES
+  // =========================================================
+
   issues: Issue[] = [];
 
-  // Filter
+  // =========================================================
+  // FILTER
+  // =========================================================
+
   selectedFilter: string = 'ALL';
 
-  // Error message
+  // =========================================================
+  // ERROR
+  // =========================================================
+
   errorMessage: string = '';
+
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
 
   constructor(
     private issueService: IssueService
   ) {}
+
+  // =========================================================
+  // INIT
+  // =========================================================
 
   ngOnInit(): void {
     this.loadIssues();
@@ -49,7 +70,7 @@ export class OwnerDashboardComponent implements OnInit {
 
   loadIssues(): void {
 
-    if (this.project.id === undefined) {
+    if (this.project.id === undefined || this.project.id === null) {
       this.errorMessage = 'Project ID is missing.';
       return;
     }
@@ -57,15 +78,26 @@ export class OwnerDashboardComponent implements OnInit {
     this.issueService
       .getIssuesByProject(this.project.id)
       .subscribe({
+
         next: (data: Issue[]) => {
+
           this.issues = data || [];
+
           this.errorMessage = '';
+
+          console.log('Issues loaded:', this.issues);
         },
 
         error: (error) => {
-          console.error('Failed to load issues:', error);
+
+          console.error(
+            'Failed to load issues:',
+            error
+          );
+
           this.errorMessage = 'Failed to load issues.';
         }
+
       });
   }
 
@@ -133,59 +165,97 @@ export class OwnerDashboardComponent implements OnInit {
   }
 
   getOpenIssues(): number {
+
     return this.issues.filter(
       issue => issue.status === 'OPEN'
     ).length;
+
   }
 
   getHighPriorityIssues(): number {
+
     return this.issues.filter(
       issue => issue.priority === 'HIGH'
     ).length;
+
   }
 
   getInProgressIssues(): number {
+
     return this.issues.filter(
       issue => issue.status === 'IN_PROGRESS'
     ).length;
+
   }
 
   getClosedIssues(): number {
+
     return this.issues.filter(
       issue => issue.status === 'CLOSED'
     ).length;
+
   }
 
   // =========================================================
   // UPDATE STATUS
   // =========================================================
 
-  updateStatus(issue: Issue, event: Event): void {
+  updateStatus(
+    issue: Issue,
+    event: Event
+  ): void {
 
-    if (issue.id === undefined) {
+    if (
+      issue.id === undefined ||
+      issue.id === null
+    ) {
       alert('Issue ID is missing.');
       return;
     }
 
-    const select = event.target as HTMLSelectElement;
+    const select =
+      event.target as HTMLSelectElement;
+
     const status = select.value;
 
+    if (!status) {
+      alert('Please select a valid status.');
+      return;
+    }
+
+    console.log(
+      'Updating status:',
+      issue.id,
+      status
+    );
+
     this.issueService
-      .updateIssueStatus(issue.id, status)
+      .updateIssueStatus(
+        issue.id,
+        status
+      )
       .subscribe({
 
         next: (updatedIssue: Issue) => {
-          issue.status = updatedIssue.status;
+
+          issue.status =
+            updatedIssue.status;
+
         },
 
         error: (error) => {
+
           console.error(
             'Failed to update issue status:',
             error
           );
 
-          alert('Failed to update issue status.');
+          alert(
+            'Failed to update issue status.'
+          );
+
         }
+
       });
   }
 
@@ -193,32 +263,62 @@ export class OwnerDashboardComponent implements OnInit {
   // UPDATE PRIORITY
   // =========================================================
 
-  updatePriority(issue: Issue, event: Event): void {
+  updatePriority(
+    issue: Issue,
+    event: Event
+  ): void {
 
-    if (issue.id === undefined) {
+    if (
+      issue.id === undefined ||
+      issue.id === null
+    ) {
       alert('Issue ID is missing.');
       return;
     }
 
-    const select = event.target as HTMLSelectElement;
+    const select =
+      event.target as HTMLSelectElement;
+
     const priority = select.value;
 
+    if (!priority) {
+      alert('Please select a valid priority.');
+      return;
+    }
+
+    console.log(
+      'Updating priority:',
+      issue.id,
+      priority
+    );
+
     this.issueService
-      .updateIssuePriority(issue.id, priority)
+      .updateIssuePriority(
+        issue.id,
+        priority
+      )
       .subscribe({
 
         next: (updatedIssue: Issue) => {
-          issue.priority = updatedIssue.priority;
+
+          issue.priority =
+            updatedIssue.priority;
+
         },
 
         error: (error) => {
+
           console.error(
             'Failed to update issue priority:',
             error
           );
 
-          alert('Failed to update issue priority.');
+          alert(
+            'Failed to update issue priority.'
+          );
+
         }
+
       });
   }
 
@@ -226,46 +326,132 @@ export class OwnerDashboardComponent implements OnInit {
   // UPDATE ASSIGNEE
   // =========================================================
 
-  updateAssignee(issue: Issue, event: Event): void {
+  updateAssignee(
+    issue: Issue,
+    event: Event
+  ): void {
 
-    if (issue.id === undefined) {
+    // Check issue ID
+    if (
+      issue.id === undefined ||
+      issue.id === null
+    ) {
       alert('Issue ID is missing.');
       return;
     }
 
-    const select = event.target as HTMLSelectElement;
+    const select =
+      event.target as HTMLSelectElement;
 
-    const assigneeId = Number(select.value);
+    /*
+     * Angular [ngValue] can produce an internal
+     * select value such as:
+     *
+     * 0: 1
+     * 1: 2
+     * 2: 3
+     * 3: 4
+     *
+     * Therefore Number(select.value) directly
+     * can produce NaN.
+     */
 
-    if (!assigneeId) {
-      alert('Please select a valid assignee.');
+    const rawValue = select.value;
+
+    console.log(
+      'Raw assignee value:',
+      rawValue
+    );
+
+    let assigneeId: number;
+
+    // Handle Angular [ngValue]
+    if (rawValue.includes(':')) {
+
+      const parts =
+        rawValue.split(':');
+
+      const lastPart =
+        parts[parts.length - 1].trim();
+
+      assigneeId =
+        Number(lastPart);
+
+    } else {
+
+      // Handle normal value="4"
+      assigneeId =
+        Number(rawValue);
+
+    }
+
+    console.log(
+      'Parsed assignee ID:',
+      assigneeId
+    );
+
+    // Validate
+    if (
+      !Number.isInteger(assigneeId) ||
+      assigneeId <= 0
+    ) {
+
+      alert(
+        'Please select a valid assignee.'
+      );
+
       return;
     }
 
+    console.log(
+      'Updating assignee:',
+      issue.id,
+      assigneeId
+    );
+
+    // Call backend
     this.issueService
-      .updateIssueAssignee(issue.id, assigneeId)
+      .updateIssueAssignee(
+        issue.id,
+        assigneeId
+      )
       .subscribe({
 
         next: (updatedIssue: Issue) => {
-          issue.assigneeId = updatedIssue.assigneeId;
+
+          console.log(
+            'Assignee updated successfully:',
+            updatedIssue
+          );
+
+          issue.assigneeId =
+            updatedIssue.assigneeId;
+
         },
 
         error: (error) => {
+
           console.error(
             'Failed to update issue assignee:',
             error
           );
 
-          alert('Failed to update issue assignee.');
+          alert(
+            'Failed to update issue assignee.'
+          );
+
         }
+
       });
   }
 
   // =========================================================
-  // STATUS CLASS
+  // STATUS CSS CLASS
   // =========================================================
 
-  getStatusClass(status: string): string {
+  getStatusClass(
+    status: string
+  ): string {
 
     if (status === 'OPEN') {
       return 'open';
@@ -283,10 +469,12 @@ export class OwnerDashboardComponent implements OnInit {
   }
 
   // =========================================================
-  // PRIORITY CLASS
+  // PRIORITY CSS CLASS
   // =========================================================
 
-  getPriorityClass(priority: string): string {
+  getPriorityClass(
+    priority: string
+  ): string {
 
     if (priority === 'HIGH') {
       return 'high';
@@ -302,4 +490,5 @@ export class OwnerDashboardComponent implements OnInit {
 
     return '';
   }
+
 }
