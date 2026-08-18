@@ -1,168 +1,231 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+<div class="issue-details-page">
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
+  <div class="page-header">
 
-@Component({
-  selector: 'app-issue-details',
-  standalone: true,
-  imports: [
-    CommonModule
-  ],
-  templateUrl: './issue-details.component.html',
-  styleUrl: './issue-details.component.css'
-})
-export class IssueDetailsComponent implements OnInit {
+    <div>
+      <h1>Issue Details</h1>
 
-  issue: Issue | null = null;
+      <p>
+        View complete information about the issue.
+      </p>
+    </div>
 
-  loading: boolean = true;
-  errorMessage: string = '';
+    <button
+      type="button"
+      class="back-button"
+      (click)="goBack()">
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private issueService: IssueService
-  ) {}
+      Back to Dashboard
 
-  ngOnInit(): void {
+    </button>
 
-    const id = Number(
-      this.route.snapshot.paramMap.get('id')
-    );
+  </div>
 
-    if (!id) {
-      this.errorMessage = 'Invalid issue ID.';
-      this.loading = false;
-      return;
-    }
 
-    this.loadIssue(id);
-  }
+  <!-- Loading -->
 
-  loadIssue(issueId: number): void {
+  <div
+    class="loading"
+    *ngIf="loading">
 
-    this.loading = true;
-    this.errorMessage = '';
+    Loading issue details...
 
-    this.issueService
-      .getIssueById(issueId)
-      .subscribe({
+  </div>
 
-        next: (data: Issue) => {
 
-          this.issue = data;
-          this.loading = false;
-        },
+  <!-- Error -->
 
-        error: (error) => {
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
 
-          console.error(
-            'Failed to load issue:',
-            error
-          );
+    {{ errorMessage }}
 
-          this.errorMessage =
-            'Failed to load issue details.';
+  </div>
 
-          this.loading = false;
-        }
-      });
-  }
 
-  editIssue(): void {
+  <!-- Issue -->
 
-    if (!this.issue?.id) {
-      return;
-    }
+  <div
+    class="issue-card"
+    *ngIf="issue && !loading">
 
-    this.router.navigate([
-      '/edit-issue',
-      this.issue.id
-    ]);
-  }
 
-  deleteIssue(): void {
+    <!-- HEADER -->
 
-    if (!this.issue?.id) {
-      return;
-    }
+    <div class="issue-header">
 
-    const confirmed = confirm(
-      'Are you sure you want to delete this issue?'
-    );
+      <div>
 
-    if (!confirmed) {
-      return;
-    }
+        <h2>
+          {{ issue.summary }}
+        </h2>
 
-    this.issueService
-      .deleteIssue(this.issue.id)
-      .subscribe({
+        <p class="issue-id">
+          Issue ID: {{ issue.id }}
+        </p>
 
-        next: () => {
+      </div>
 
-          alert('Issue deleted successfully.');
 
-          this.router.navigate([
-            '/owner-dashboard'
-          ]);
-        },
+      <span
+        class="status-badge"
+        [ngClass]="getStatusClass(issue.status)">
 
-        error: (error) => {
+        {{ issue.status }}
 
-          console.error(
-            'Failed to delete issue:',
-            error
-          );
+      </span>
 
-          alert(
-            'Failed to delete issue.'
-          );
-        }
-      });
-  }
+    </div>
 
-  goBack(): void {
 
-    this.router.navigate([
-      '/owner-dashboard'
-    ]);
-  }
+    <!-- DESCRIPTION -->
 
-  getStatusClass(status: string): string {
+    <div class="section">
 
-    if (status === 'OPEN') {
-      return 'open';
-    }
+      <h3>Description</h3>
 
-    if (status === 'IN_PROGRESS') {
-      return 'progress';
-    }
+      <p>
+        {{ issue.description }}
+      </p>
 
-    if (status === 'CLOSED') {
-      return 'closed';
-    }
+    </div>
 
-    return '';
-  }
 
-  getPriorityClass(priority: string): string {
+    <!-- DETAILS -->
 
-    if (priority === 'HIGH') {
-      return 'high';
-    }
+    <div class="details-grid">
 
-    if (priority === 'MEDIUM') {
-      return 'medium';
-    }
+      <div class="detail">
 
-    if (priority === 'LOW') {
-      return 'low';
-    }
+        <strong>Project ID</strong>
 
-    return '';
-  }
-}
+        <span>
+          {{ issue.projectId }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Type</strong>
+
+        <span>
+          {{ issue.type }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Priority</strong>
+
+        <span
+          class="priority"
+          [ngClass]="getPriorityClass(issue.priority)">
+
+          {{ issue.priority }}
+
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Assignee</strong>
+
+        <span>
+          {{ issue.assigneeId }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Sprint</strong>
+
+        <span>
+          {{ issue.sprint || 'Not specified' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Story Point</strong>
+
+        <span>
+          {{ issue.storyPoint }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Tags</strong>
+
+        <span>
+          {{ issue.tags || 'No tags' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Created Date</strong>
+
+        <span>
+          {{ issue.createdDate || 'Not available' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <strong>Last Updated</strong>
+
+        <span>
+          {{ issue.lastUpdatedDate || 'Not available' }}
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- ACTIONS -->
+
+    <div class="actions">
+
+      <button
+        type="button"
+        class="edit-button"
+        (click)="editIssue()">
+
+        Edit Issue
+
+      </button>
+
+
+      <button
+        type="button"
+        class="delete-button"
+        (click)="deleteIssue()">
+
+        Delete Issue
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
