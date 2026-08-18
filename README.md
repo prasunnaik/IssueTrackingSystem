@@ -1,427 +1,298 @@
-<div class="dashboard">
-
-  <!-- ===================================== -->
-  <!-- PAGE HEADER -->
-  <!-- ===================================== -->
-
-  <div class="dashboard-header">
-
-    <div>
-      <h1>Project Owner Dashboard</h1>
-
-      <p>
-        Manage your projects and track issues
-      </p>
-    </div>
-
-    <button
-      type="button"
-      class="refresh-button"
-      (click)="refresh()">
-
-      Refresh
-
-    </button>
-
-  </div>
-
-
-  <!-- ===================================== -->
-  <!-- ERROR MESSAGE -->
-  <!-- ===================================== -->
-
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
-
-    {{ errorMessage }}
-
-  </div>
-
-
-  <!-- ===================================== -->
-  <!-- PROJECT CARD -->
-  <!-- ===================================== -->
-
-  <div
-    class="project-card"
-    *ngIf="project">
-
-    <!-- PROJECT HEADER -->
-
-    <div class="project-header">
-
-      <div>
-
-        <h2>
-          {{ project.name }}
-        </h2>
-
-        <p>
-          Project ID:
-          {{ project.id }}
-        </p>
-
-      </div>
-
-      <div class="project-dates">
-
-        <p>
-          <strong>Start:</strong>
-          {{ project.startDate }}
-        </p>
-
-        <p>
-          <strong>End:</strong>
-          {{ project.endDate }}
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================= -->
-    <!-- STATISTICS -->
-    <!-- ================================= -->
-
-    <div class="statistics">
-
-      <!-- TOTAL -->
-
-      <div class="stat-card">
-
-        <h3>
-          {{ getTotalIssues() }}
-        </h3>
-
-        <p>
-          Total Issues
-        </p>
-
-      </div>
-
-
-      <!-- OPEN -->
-
-      <div class="stat-card">
-
-        <h3>
-          {{ getOpenIssues() }}
-        </h3>
-
-        <p>
-          Open Issues
-        </p>
-
-      </div>
-
-
-      <!-- HIGH PRIORITY -->
-
-      <div class="stat-card">
-
-        <h3>
-          {{ getHighPriorityIssues() }}
-        </h3>
-
-        <p>
-          High Priority
-        </p>
-
-      </div>
-
-
-      <!-- IN PROGRESS -->
-
-      <div class="stat-card">
-
-        <h3>
-          {{ getInProgressIssues() }}
-        </h3>
-
-        <p>
-          In Progress
-        </p>
-
-      </div>
-
-
-      <!-- CLOSED -->
-
-      <div class="stat-card">
-
-        <h3>
-          {{ getClosedIssues() }}
-        </h3>
-
-        <p>
-          Closed
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================= -->
-    <!-- FILTER BUTTONS -->
-    <!-- ================================= -->
-
-    <div class="filters">
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'ALL'"
-        (click)="filterIssues('ALL')">
-
-        All
-
-      </button>
-
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'OPEN'"
-        (click)="filterIssues('OPEN')">
-
-        Open
-
-      </button>
-
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'IN_PROGRESS'"
-        (click)="filterIssues('IN_PROGRESS')">
-
-        In Progress
-
-      </button>
-
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'HIGH'"
-        (click)="filterIssues('HIGH')">
-
-        High Priority
-
-      </button>
-
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'MEDIUM'"
-        (click)="filterIssues('MEDIUM')">
-
-        Medium
-
-      </button>
-
-
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'CLOSED'"
-        (click)="filterIssues('CLOSED')">
-
-        Closed
-
-      </button>
-
-    </div>
-
-
-    <!-- ================================= -->
-    <!-- ISSUES -->
-    <!-- ================================= -->
-
-    <div class="issues-section">
-
-      <h2>
-        Issues
-      </h2>
-
-
-      <!-- ISSUE CARD -->
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of filteredIssues">
-
-
-        <!-- ISSUE DETAILS -->
-
-        <div class="issue-details">
-
-          <h3>
-            {{ issue.title }}
-          </h3>
-
-
-          <p>
-            <strong>Issue ID:</strong>
-            {{ issue.id }}
-          </p>
-
-
-          <p>
-            <strong>Description:</strong>
-            {{ issue.description }}
-          </p>
-
-
-          <div class="issue-info">
-
-            <!-- PRIORITY -->
-
-            <span>
-
-              <strong>Priority:</strong>
-
-              <select
-                [ngModel]="issue.priority"
-                (ngModelChange)="
-                  updatePriority(issue, $event)
-                ">
-
-                <option value="LOW">
-                  LOW
-                </option>
-
-                <option value="MEDIUM">
-                  MEDIUM
-                </option>
-
-                <option value="HIGH">
-                  HIGH
-                </option>
-
-              </select>
-
-            </span>
-
-
-            <!-- TYPE -->
-
-            <span>
-
-              <strong>Type:</strong>
-
-              {{ issue.type }}
-
-            </span>
-
-
-            <!-- ASSIGNEE -->
-
-            <span>
-
-              <strong>Assignee:</strong>
-
-              <select
-                [ngModel]="issue.assigneeId"
-                (ngModelChange)="
-                  updateAssignee(
-                    issue,
-                    +$event
-                  )
-                ">
-
-                <option value="1">
-                  1
-                </option>
-
-                <option value="2">
-                  2
-                </option>
-
-                <option value="3">
-                  3
-                </option>
-
-                <option value="4">
-                  4
-                </option>
-
-              </select>
-
-            </span>
-
-
-            <!-- STORY POINTS -->
-
-            <span>
-
-              <strong>Story Points:</strong>
-
-              {{ issue.storyPoints }}
-
-            </span>
-
-          </div>
-
-
-          <!-- STATUS -->
-
-          <div class="status-update">
-
-            <strong>
-              Update Status:
-            </strong>
-
-
-            <select
-              [ngModel]="issue.status"
-              (ngModelChange)="
-                updateStatus(
-                  issue,
-                  $event
-                )
-              ">
-
-              <option value="OPEN">
-                OPEN
-              </option>
-
-              <option value="IN_PROGRESS">
-                IN_PROGRESS
-              </option>
-
-              <option value="CLOSED">
-                CLOSED
-              </option>
-
-            </select>
-
-          </div>
-
-        </div>
-
-
-        <!-- CURRENT STATUS -->
-
-        <div class="issue-status">
-
-          {{ issue.status }}
-
-        </div>
-
-      </div>
-
-
-      <!-- NO ISSUES -->
-
-      <div
-        class="no-issues"
-        *ngIf="filteredIssues.length === 0">
-
-        No issues found for this filter.
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
+import { Component, OnInit } from '@angular/core';
+import { IssueService } from '../../services/issue.service';
+import { Issue } from '../../models/issue';
+import { Project } from '../../models/project';
+
+@Component({
+  selector: 'app-owner-dashboard',
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
+})
+export class OwnerDashboardComponent implements OnInit {
+
+  // Project currently displayed
+  project: Project = {
+    id: 3,
+    projectName: 'PMS',
+    projectOwnerId: 1,
+    startDate: '2026-08-10',
+    endDate: '2027-01-31'
+  };
+
+  // Issues belonging to the project
+  issues: Issue[] = [];
+
+  // Filter
+  selectedFilter: string = 'ALL';
+
+  // Error message
+  errorMessage: string = '';
+
+  constructor(
+    private issueService: IssueService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadIssues();
+  }
+
+  // =========================================================
+  // LOAD ISSUES
+  // =========================================================
+
+  loadIssues(): void {
+
+    if (this.project.id === undefined) {
+      this.errorMessage = 'Project ID is missing.';
+      return;
+    }
+
+    this.issueService
+      .getIssuesByProjectId(this.project.id)
+      .subscribe({
+        next: (data: Issue[]) => {
+          this.issues = data || [];
+          this.errorMessage = '';
+        },
+
+        error: (error) => {
+          console.error('Failed to load issues:', error);
+          this.errorMessage = 'Failed to load issues.';
+        }
+      });
+  }
+
+  // =========================================================
+  // REFRESH DASHBOARD
+  // =========================================================
+
+  refreshDashboard(): void {
+    this.loadIssues();
+  }
+
+  // =========================================================
+  // FILTER
+  // =========================================================
+
+  filterIssues(filter: string): void {
+    this.selectedFilter = filter;
+  }
+
+  get filteredIssues(): Issue[] {
+
+    if (this.selectedFilter === 'ALL') {
+      return this.issues;
+    }
+
+    if (this.selectedFilter === 'OPEN') {
+      return this.issues.filter(
+        issue => issue.status === 'OPEN'
+      );
+    }
+
+    if (this.selectedFilter === 'IN_PROGRESS') {
+      return this.issues.filter(
+        issue => issue.status === 'IN_PROGRESS'
+      );
+    }
+
+    if (this.selectedFilter === 'HIGH') {
+      return this.issues.filter(
+        issue => issue.priority === 'HIGH'
+      );
+    }
+
+    if (this.selectedFilter === 'MEDIUM') {
+      return this.issues.filter(
+        issue => issue.priority === 'MEDIUM'
+      );
+    }
+
+    if (this.selectedFilter === 'CLOSED') {
+      return this.issues.filter(
+        issue => issue.status === 'CLOSED'
+      );
+    }
+
+    return this.issues;
+  }
+
+  // =========================================================
+  // DASHBOARD COUNTS
+  // =========================================================
+
+  getTotalIssues(): number {
+    return this.issues.length;
+  }
+
+  getOpenIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'OPEN'
+    ).length;
+  }
+
+  getHighPriorityIssues(): number {
+    return this.issues.filter(
+      issue => issue.priority === 'HIGH'
+    ).length;
+  }
+
+  getInProgressIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    ).length;
+  }
+
+  getClosedIssues(): number {
+    return this.issues.filter(
+      issue => issue.status === 'CLOSED'
+    ).length;
+  }
+
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
+
+  updateStatus(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+    const status = select.value;
+
+    this.issueService
+      .updateIssueStatus(issue.id, status)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.status = updatedIssue.status;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue status:',
+            error
+          );
+
+          alert('Failed to update issue status.');
+        }
+      });
+  }
+
+  // =========================================================
+  // UPDATE PRIORITY
+  // =========================================================
+
+  updatePriority(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+    const priority = select.value;
+
+    this.issueService
+      .updateIssuePriority(issue.id, priority)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.priority = updatedIssue.priority;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue priority:',
+            error
+          );
+
+          alert('Failed to update issue priority.');
+        }
+      });
+  }
+
+  // =========================================================
+  // UPDATE ASSIGNEE
+  // =========================================================
+
+  updateAssignee(issue: Issue, event: Event): void {
+
+    if (issue.id === undefined) {
+      alert('Issue ID is missing.');
+      return;
+    }
+
+    const select = event.target as HTMLSelectElement;
+
+    const assigneeId = Number(select.value);
+
+    if (!assigneeId) {
+      alert('Please select a valid assignee.');
+      return;
+    }
+
+    this.issueService
+      .updateIssueAssignee(issue.id, assigneeId)
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+          issue.assigneeId = updatedIssue.assigneeId;
+        },
+
+        error: (error) => {
+          console.error(
+            'Failed to update issue assignee:',
+            error
+          );
+
+          alert('Failed to update issue assignee.');
+        }
+      });
+  }
+
+  // =========================================================
+  // STATUS CLASS
+  // =========================================================
+
+  getStatusClass(status: string): string {
+
+    if (status === 'OPEN') {
+      return 'open';
+    }
+
+    if (status === 'IN_PROGRESS') {
+      return 'progress';
+    }
+
+    if (status === 'CLOSED') {
+      return 'closed';
+    }
+
+    return '';
+  }
+
+  // =========================================================
+  // PRIORITY CLASS
+  // =========================================================
+
+  getPriorityClass(priority: string): string {
+
+    if (priority === 'HIGH') {
+      return 'high';
+    }
+
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
+
+    if (priority === 'LOW') {
+      return 'low';
+    }
+
+    return '';
+  }
+}
