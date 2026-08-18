@@ -1,233 +1,297 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+<div class="create-issue-container">
 
-import { IssueService } from '../../services/issue.service';
-import { ProjectService } from '../../services/project.service';
+  <div class="issue-card">
 
-import { Issue } from '../../models/issue';
-import { Project } from '../../models/project';
+    <h2>Create Issue</h2>
 
-@Component({
-  selector: 'app-create-issue',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './create-issue.component.html',
-  styleUrls: ['./create-issue.component.css']
-})
-export class CreateIssueComponent implements OnInit {
+    <p class="subtitle">
+      Create a new issue for your project
+    </p>
 
-  ownerId: number = 1;
 
-  projects: Project[] = [];
+    <!-- ERROR -->
 
-  errorMessage: string = '';
+    <div
+      class="error-message"
+      *ngIf="errorMessage">
 
-  successMessage: string = '';
+      {{ errorMessage }}
 
-  loading: boolean = false;
+    </div>
 
-  issue: Issue = {
-    summary: '',
-    description: '',
-    status: 'OPEN',
-    priority: 'MEDIUM',
-    type: 'TASK',
-    assigneeId: 1,
-    storyPoint: 1,
-    projectId: undefined,
-    sprint: '',
-    tags: ''
-  } as Issue;
 
+    <!-- SUCCESS -->
 
-  constructor(
-    private issueService: IssueService,
-    private projectService: ProjectService,
-    private router: Router
-  ) {}
+    <div
+      class="success-message"
+      *ngIf="successMessage">
 
+      {{ successMessage }}
 
-  ngOnInit(): void {
+    </div>
 
-    this.loadProjects();
-  }
 
+    <!-- SUMMARY -->
 
-  loadProjects(): void {
+    <div class="form-group">
 
-    this.projectService
-      .getProjectsByOwner(this.ownerId)
-      .subscribe({
+      <label for="summary">
+        Summary
+      </label>
 
-        next: (data: Project[]) => {
+      <input
+        id="summary"
+        type="text"
+        [(ngModel)]="issue.summary"
+        placeholder="Enter issue summary"
+      />
 
-          this.projects = data || [];
+    </div>
 
-          if (
-            this.projects.length > 0 &&
-            this.issue.projectId === undefined
-          ) {
 
-            this.issue.projectId =
-              this.projects[0].id;
-          }
-        },
+    <!-- DESCRIPTION -->
 
-        error: (error: any) => {
+    <div class="form-group">
 
-          console.error(
-            'Failed to load projects:',
-            error
-          );
+      <label for="description">
+        Description
+      </label>
 
-          this.errorMessage =
-            'Failed to load projects.';
-        }
-      });
-  }
+      <textarea
+        id="description"
+        [(ngModel)]="issue.description"
+        placeholder="Enter issue description"
+        rows="5">
+      </textarea>
 
+    </div>
 
-  createIssue(): void {
 
-    this.errorMessage = '';
+    <!-- PROJECT -->
 
-    this.successMessage = '';
+    <div class="form-group">
 
+      <label for="project">
+        Project
+      </label>
 
-    // Summary validation
+      <select
+        id="project"
+        [(ngModel)]="issue.projectId">
 
-    if (
-      !this.issue.summary ||
-      !this.issue.summary.trim()
-    ) {
+        <option
+          [ngValue]="undefined">
 
-      this.errorMessage =
-        'Issue summary is required.';
+          Select Project
 
-      return;
-    }
+        </option>
 
+        <option
+          *ngFor="let project of projects"
+          [ngValue]="project.id">
 
-    // Description validation
+          {{ project.projectName }}
 
-    if (
-      !this.issue.description ||
-      !this.issue.description.trim()
-    ) {
+        </option>
 
-      this.errorMessage =
-        'Issue description is required.';
+      </select>
 
-      return;
-    }
+    </div>
 
 
-    // Project validation
+    <!-- TYPE -->
 
-    if (
-      this.issue.projectId === undefined ||
-      this.issue.projectId === null
-    ) {
+    <div class="form-group">
 
-      this.errorMessage =
-        'Please select a project.';
+      <label for="type">
+        Type
+      </label>
 
-      return;
-    }
+      <select
+        id="type"
+        [(ngModel)]="issue.type">
 
+        <option value="TASK">
+          TASK
+        </option>
 
-    // Assignee validation
+        <option value="BUG">
+          BUG
+        </option>
 
-    if (
-      !this.issue.assigneeId
-    ) {
+        <option value="STORY">
+          STORY
+        </option>
 
-      this.errorMessage =
-        'Please select an assignee.';
+        <option value="EPIC">
+          EPIC
+        </option>
 
-      return;
-    }
+      </select>
 
+    </div>
 
-    // Story point validation
 
-    if (
-      !this.issue.storyPoint ||
-      this.issue.storyPoint <= 0
-    ) {
+    <!-- PRIORITY -->
 
-      this.errorMessage =
-        'Story points must be greater than 0.';
+    <div class="form-group">
 
-      return;
-    }
+      <label for="priority">
+        Priority
+      </label>
 
+      <select
+        id="priority"
+        [(ngModel)]="issue.priority">
 
-    this.loading = true;
+        <option value="HIGH">
+          HIGH
+        </option>
 
+        <option value="MEDIUM">
+          MEDIUM
+        </option>
 
-    this.issueService
-      .createIssue(this.issue)
-      .subscribe({
+        <option value="LOW">
+          LOW
+        </option>
 
-        next: (createdIssue: Issue) => {
+      </select>
 
-          this.loading = false;
+    </div>
 
-          this.successMessage =
-            'Issue created successfully.';
 
-          console.log(
-            'Created issue:',
-            createdIssue
-          );
+    <!-- STATUS -->
 
+    <div class="form-group">
 
-          // Reset form
+      <label for="status">
+        Status
+      </label>
 
-          this.issue = {
-            summary: '',
-            description: '',
-            status: 'OPEN',
-            priority: 'MEDIUM',
-            type: 'TASK',
-            assigneeId: 1,
-            storyPoint: 1,
-            projectId:
-              this.projects.length > 0
-                ? this.projects[0].id
-                : undefined,
-            sprint: '',
-            tags: ''
-          } as Issue;
-        },
+      <select
+        id="status"
+        [(ngModel)]="issue.status">
 
+        <option value="OPEN">
+          OPEN
+        </option>
 
-        error: (error: any) => {
+        <option value="IN_PROGRESS">
+          IN_PROGRESS
+        </option>
 
-          this.loading = false;
+        <option value="CLOSED">
+          CLOSED
+        </option>
 
-          console.error(
-            'Failed to create issue:',
-            error
-          );
+      </select>
 
-          this.errorMessage =
-            'Failed to create issue.';
-        }
-      });
-  }
+    </div>
 
 
-  goBack(): void {
+    <!-- ASSIGNEE -->
 
-    this.router.navigate([
-      '/owner-dashboard'
-    ]);
-  }
-}
+    <div class="form-group">
+
+      <label for="assignee">
+        Assignee ID
+      </label>
+
+      <input
+        id="assignee"
+        type="number"
+        min="1"
+        [(ngModel)]="issue.assigneeId"
+      />
+
+    </div>
+
+
+    <!-- STORY POINT -->
+
+    <div class="form-group">
+
+      <label for="storyPoint">
+        Story Points
+      </label>
+
+      <input
+        id="storyPoint"
+        type="number"
+        min="1"
+        [(ngModel)]="issue.storyPoint"
+      />
+
+    </div>
+
+
+    <!-- SPRINT -->
+
+    <div class="form-group">
+
+      <label for="sprint">
+        Sprint
+      </label>
+
+      <input
+        id="sprint"
+        type="text"
+        [(ngModel)]="issue.sprint"
+        placeholder="Enter sprint"
+      />
+
+    </div>
+
+
+    <!-- TAGS -->
+
+    <div class="form-group">
+
+      <label for="tags">
+        Tags
+      </label>
+
+      <input
+        id="tags"
+        type="text"
+        [(ngModel)]="issue.tags"
+        placeholder="Enter tags"
+      />
+
+    </div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="button-container">
+
+      <button
+        type="button"
+        class="create-button"
+        (click)="createIssue()"
+        [disabled]="loading">
+
+        {{
+          loading
+            ? 'Creating...'
+            : 'Create Issue'
+        }}
+
+      </button>
+
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="goBack()">
+
+        Back
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
