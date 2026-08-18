@@ -1,217 +1,348 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+<div class="edit-page">
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
+  <div class="page-header">
 
-@Component({
-  selector: 'app-edit-issue',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './edit-issue.component.html',
-  styleUrl: './edit-issue.component.css'
-})
-export class EditIssueComponent implements OnInit {
+    <div>
+      <h1>Edit Issue</h1>
 
-  issue: Issue = {
-    summary: '',
-    description: '',
-    status: 'OPEN',
-    priority: 'MEDIUM',
-    type: 'BUG',
-    storyPoint: 1,
-    sprint: '',
-    tags: '',
-    projectId: undefined,
-    assigneeId: undefined
-  };
+      <p>
+        Update the issue details below.
+      </p>
+    </div>
 
-  issueId: number = 0;
+    <button
+      type="button"
+      class="cancel-button"
+      (click)="cancel()">
 
-  loading: boolean = true;
-  saving: boolean = false;
+      Cancel
 
-  errorMessage: string = '';
-  successMessage: string = '';
+    </button>
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private issueService: IssueService
-  ) {}
+  </div>
 
-  ngOnInit(): void {
 
-    const id = Number(
-      this.route.snapshot.paramMap.get('id')
-    );
+  <!-- Loading -->
 
-    if (!id) {
+  <div
+    class="loading"
+    *ngIf="loading">
 
-      this.errorMessage =
-        'Invalid issue ID.';
+    Loading issue...
 
-      this.loading = false;
+  </div>
 
-      return;
-    }
 
-    this.issueId = id;
+  <!-- Error -->
 
-    this.loadIssue();
-  }
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
 
-  loadIssue(): void {
+    {{ errorMessage }}
 
-    this.issueService
-      .getIssueById(this.issueId)
-      .subscribe({
+  </div>
 
-        next: (data: Issue) => {
 
-          this.issue = {
-            ...data
-          };
+  <!-- Success -->
 
-          this.loading = false;
-        },
+  <div
+    class="success-message"
+    *ngIf="successMessage">
 
-        error: (error) => {
+    {{ successMessage }}
 
-          console.error(
-            'Failed to load issue:',
-            error
-          );
+  </div>
 
-          this.errorMessage =
-            'Failed to load issue.';
 
-          this.loading = false;
-        }
-      });
-  }
+  <!-- FORM -->
 
-  isFormValid(): boolean {
+  <form
+    *ngIf="!loading"
+    #issueForm="ngForm"
+    (ngSubmit)="saveIssue()">
 
-    if (!this.issue.summary.trim()) {
-      return false;
-    }
 
-    if (
-      this.issue.summary.length < 5 ||
-      this.issue.summary.length > 150
-    ) {
-      return false;
-    }
+    <!-- SUMMARY -->
 
-    if (!this.issue.description.trim()) {
-      return false;
-    }
+    <div class="form-group">
 
-    if (this.issue.description.length > 500) {
-      return false;
-    }
+      <label>
+        Summary *
+      </label>
 
-    if (!this.issue.type) {
-      return false;
-    }
+      <input
+        type="text"
+        name="summary"
+        [(ngModel)]="issue.summary"
+        required
+        minlength="5"
+        maxlength="150"
+        placeholder="Enter issue summary">
 
-    if (!this.issue.priority) {
-      return false;
-    }
+      <small>
+        Minimum 5 characters, maximum 150 characters.
+      </small>
 
-    if (!this.issue.status) {
-      return false;
-    }
+    </div>
 
-    if (
-      !this.issue.assigneeId ||
-      this.issue.assigneeId <= 0
-    ) {
-      return false;
-    }
 
-    if (
-      !this.issue.storyPoint ||
-      this.issue.storyPoint <= 0
-    ) {
-      return false;
-    }
+    <!-- PROJECT -->
 
-    return true;
-  }
+    <div class="form-group">
 
-  saveIssue(): void {
+      <label>
+        Project ID
+      </label>
 
-    this.errorMessage = '';
-    this.successMessage = '';
+      <input
+        type="number"
+        name="projectId"
+        [(ngModel)]="issue.projectId"
+        readonly>
 
-    if (!this.isFormValid()) {
+    </div>
 
-      this.errorMessage =
-        'Please fill all required fields correctly.';
 
-      return;
-    }
+    <!-- TYPE -->
 
-    this.saving = true;
+    <div class="form-group">
 
-    this.issueService
-      .updateIssue(
-        this.issueId,
-        this.issue
-      )
-      .subscribe({
+      <label>
+        Type *
+      </label>
 
-        next: (updatedIssue: Issue) => {
+      <select
+        name="type"
+        [(ngModel)]="issue.type"
+        required>
 
-          this.saving = false;
+        <option value="BUG">
+          BUG
+        </option>
 
-          this.successMessage =
-            'Issue updated successfully.';
+        <option value="TASK">
+          TASK
+        </option>
 
-          setTimeout(() => {
+        <option value="STORY">
+          STORY
+        </option>
 
-            this.router.navigate([
-              '/issue',
-              this.issueId
-            ]);
+      </select>
 
-          }, 700);
-        },
+    </div>
 
-        error: (error) => {
 
-          console.error(
-            'Failed to update issue:',
-            error
-          );
+    <!-- PRIORITY -->
 
-          this.saving = false;
+    <div class="form-group">
 
-          this.errorMessage =
-            'Failed to update issue.';
-        }
-      });
-  }
+      <label>
+        Priority *
+      </label>
 
-  resetForm(): void {
+      <select
+        name="priority"
+        [(ngModel)]="issue.priority"
+        required>
 
-    this.loadIssue();
-    this.errorMessage = '';
-    this.successMessage = '';
-  }
+        <option value="LOW">
+          LOW
+        </option>
 
-  cancel(): void {
+        <option value="MEDIUM">
+          MEDIUM
+        </option>
 
-    this.router.navigate([
-      '/issue',
-      this.issueId
-    ]);
-  }
-}
+        <option value="HIGH">
+          HIGH
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- DESCRIPTION -->
+
+    <div class="form-group">
+
+      <label>
+        Description *
+      </label>
+
+      <textarea
+        name="description"
+        [(ngModel)]="issue.description"
+        required
+        maxlength="500"
+        rows="5"
+        placeholder="Enter issue description">
+      </textarea>
+
+      <small>
+        Maximum 500 characters.
+      </small>
+
+    </div>
+
+
+    <!-- ASSIGNEE -->
+
+    <div class="form-group">
+
+      <label>
+        Assignee *
+      </label>
+
+      <select
+        name="assigneeId"
+        [(ngModel)]="issue.assigneeId"
+        required>
+
+        <option [ngValue]="1">
+          1
+        </option>
+
+        <option [ngValue]="2">
+          2
+        </option>
+
+        <option [ngValue]="3">
+          3
+        </option>
+
+        <option [ngValue]="4">
+          4
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- SPRINT -->
+
+    <div class="form-group">
+
+      <label>
+        Sprint
+      </label>
+
+      <input
+        type="text"
+        name="sprint"
+        [(ngModel)]="issue.sprint"
+        placeholder="Enter sprint">
+
+    </div>
+
+
+    <!-- TAGS -->
+
+    <div class="form-group">
+
+      <label>
+        Tags
+      </label>
+
+      <input
+        type="text"
+        name="tags"
+        [(ngModel)]="issue.tags"
+        maxlength="100"
+        placeholder="Enter tags">
+
+    </div>
+
+
+    <!-- STORY POINT -->
+
+    <div class="form-group">
+
+      <label>
+        Story Point *
+      </label>
+
+      <input
+        type="number"
+        name="storyPoint"
+        [(ngModel)]="issue.storyPoint"
+        required
+        min="1"
+        step="1">
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div class="form-group">
+
+      <label>
+        Status *
+      </label>
+
+      <select
+        name="status"
+        [(ngModel)]="issue.status"
+        required>
+
+        <option value="OPEN">
+          OPEN
+        </option>
+
+        <option value="IN_PROGRESS">
+          IN_PROGRESS
+        </option>
+
+        <option value="CLOSED">
+          CLOSED
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="form-buttons">
+
+      <button
+        type="submit"
+        class="save-button"
+        [disabled]="saving || !isFormValid()">
+
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+
+      </button>
+
+
+      <button
+        type="button"
+        class="reset-button"
+        [disabled]="saving"
+        (click)="resetForm()">
+
+        Reset
+
+      </button>
+
+
+      <button
+        type="button"
+        class="cancel-button"
+        [disabled]="saving"
+        (click)="cancel()">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
