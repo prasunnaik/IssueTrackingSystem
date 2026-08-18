@@ -1,27 +1,25 @@
-updatePriority(issue: any, priority: string): void {
+<span>
+  <strong>Priority:</strong>
 
-  this.issueService
-    .updateIssuePriority(issue.id, priority)
-    .subscribe({
+  <select
+    [value]="issue.priority"
+    (change)="updatePriority(
+      issue,
+      $any($event.target).value
+    )">
 
-      next: (response) => {
+    <option value="HIGH">
+      HIGH
+    </option>
 
-        issue.priority = priority;
+    <option value="MEDIUM">
+      MEDIUM
+    </option>
 
-        this.applyFilter();
+    <option value="LOW">
+      LOW
+    </option>
 
-        console.log('Priority updated successfully');
-      },
+  </select>
 
-      error: (error) => {
-
-        console.error(
-          'Failed to update issue priority:',
-          error
-        );
-
-        alert('Failed to update issue priority.');
-      }
-
-    });
-}
+</span>
