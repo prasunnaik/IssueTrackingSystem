@@ -1,95 +1,55 @@
-<div class="dashboard">
+.dashboard {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
 
-  <h1>Project Owner Dashboard</h1>
+.dashboard h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-  <!-- Error -->
-  <p *ngIf="errorMessage" class="error">
-    {{ errorMessage }}
-  </p>
+.project-card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
-  <!-- Projects -->
-  <div *ngIf="projects.length > 0">
+.project-card h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
 
-    <div class="project-card" *ngFor="let project of projects">
+.project-card hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 25px 0;
+}
 
-      <h2>{{ project.projectName }}</h2>
+.issue-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+  background: #f8f9fa;
+}
 
-      <p>
-        <strong>Project ID:</strong>
-        {{ project.id }}
-      </p>
+.issue-card h4 {
+  margin-top: 0;
+  font-size: 20px;
+}
 
-      <p>
-        <strong>Start Date:</strong>
-        {{ project.startDate }}
-      </p>
+.issue-card p {
+  margin: 8px 0;
+}
 
-      <p>
-        <strong>End Date:</strong>
-        {{ project.endDate }}
-      </p>
-
-      <hr>
-
-      <h3>Issues</h3>
-
-      <!-- Issues -->
-      <div *ngIf="issues && issues.length > 0">
-
-        <div class="issue-card" *ngFor="let issue of issues">
-
-          <h4>{{ issue.summary }}</h4>
-
-          <p>
-            <strong>Issue ID:</strong>
-            {{ issue.id }}
-          </p>
-
-          <p>
-            <strong>Description:</strong>
-            {{ issue.description }}
-          </p>
-
-          <p>
-            <strong>Status:</strong>
-            {{ issue.status }}
-          </p>
-
-          <p>
-            <strong>Priority:</strong>
-            {{ issue.priority }}
-          </p>
-
-          <p>
-            <strong>Type:</strong>
-            {{ issue.type }}
-          </p>
-
-          <p>
-            <strong>Assignee ID:</strong>
-            {{ issue.assigneeId }}
-          </p>
-
-          <p>
-            <strong>Story Points:</strong>
-            {{ issue.storyPoint }}
-          </p>
-
-        </div>
-
-      </div>
-
-      <p *ngIf="!issues || issues.length === 0">
-        No issues found for this project.
-      </p>
-
-    </div>
-
-  </div>
-
-  <!-- No projects -->
-  <div *ngIf="projects.length === 0 && !errorMessage">
-    No projects found.
-  </div>
-
-</div>
+.error {
+  color: red;
+  padding: 10px;
+  background: #ffe5e5;
+  border-radius: 5px;
+}
