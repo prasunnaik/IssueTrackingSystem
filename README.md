@@ -1,75 +1,23 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Project } from '../models/project';
+<div class="dashboard">
+  <h1>Project Owner Dashboard</h1>
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ProjectService {
+  <p *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </p>
 
-  private apiUrl = 'http://localhost:8082/api/projects';
+  <div *ngIf="projects.length === 0 && !errorMessage">
+    No projects found.
+  </div>
 
-  constructor(private http: HttpClient) {}
+  <div class="project-list" *ngIf="projects.length > 0">
+    <div class="project-card" *ngFor="let project of projects">
 
-  getProjectsByOwner(ownerId: number): Observable<Project[]> {
-    return this.http.get<Project[]>(
-      `${this.apiUrl}/owner/${ownerId}`
-    );
-  }
+      <h2>{{ project.projectName }}</h2>
 
-  getProjectById(projectId: number): Observable<Project> {
-    return this.http.get<Project>(
-      `${this.apiUrl}/${projectId}`
-    );
-  }
+      <p><strong>Project ID:</strong> {{ project.id }}</p>
+      <p><strong>Start Date:</strong> {{ project.startDate }}</p>
+      <p><strong>End Date:</strong> {{ project.endDate }}</p>
 
-  deleteProject(projectId: number): Observable<void> {
-    return this.http.delete<void>(
-      `${this.apiUrl}/${projectId}`
-    );
-  }
-}
-
-
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ProjectService } from '../../services/project.service';
-import { Project } from '../../models/project';
-
-@Component({
-  selector: 'app-owner-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './owner-dashboard.component.html',
-  styleUrl: './owner-dashboard.component.css'
-})
-export class OwnerDashboardComponent implements OnInit {
-
-  projects: Project[] = [];
-  errorMessage = '';
-
-  constructor(private projectService: ProjectService) {}
-
-  ngOnInit(): void {
-    const userData = localStorage.getItem('user');
-
-    if (!userData) {
-      this.errorMessage = 'User not logged in';
-      return;
-    }
-
-    const user = JSON.parse(userData);
-
-    this.projectService.getProjectsByOwner(user.id).subscribe({
-      next: (response) => {
-        this.projects = response;
-        console.log('Owner projects:', response);
-      },
-      error: (error) => {
-        console.error('Error loading projects:', error);
-        this.errorMessage = 'Unable to load projects';
-      }
-    });
-  }
-}
+    </div>
+  </div>
+</div>
