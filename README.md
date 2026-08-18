@@ -1,38 +1,96 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
-@Injectable({
-  providedIn: 'root'
+import { ProjectService } from '../../services/project.service';
+import { IssueService } from '../../services/issue.service';
+
+@Component({
+  selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
 })
-export class IssueService {
+export class OwnerDashboardComponent implements OnInit {
 
-  private apiUrl = 'http://localhost:8083/api/issues';
+  projects: any[] = [];
+  issues: any[] = [];
 
-  constructor(private http: HttpClient) {}
+  errorMessage = '';
 
-  getIssuesByProject(projectId: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      `${this.apiUrl}/project/${projectId}`
-    );
+  constructor(
+    private projectService: ProjectService,
+    private issueService: IssueService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadProjects();
   }
 
-  getIssueById(issueId: number): Observable<any> {
-    return this.http.get<any>(
-      `${this.apiUrl}/${issueId}`
-    );
+  loadProjects(): void {
+
+    this.projectService.getProjectsByOwner(1).subscribe({
+
+      next: (response: any[]) => {
+
+        this.projects = response;
+
+        if (this.projects.length > 0) {
+          this.loadIssues(this.projects[0].id);
+        }
+
+      },
+
+      error: (error) => {
+        console.error(error);
+        this.errorMessage = 'Unable to load projects.';
+      }
+
+    });
   }
 
-  updateIssue(issueId: number, issue: any): Observable<any> {
-    return this.http.put<any>(
-      `${this.apiUrl}/${issueId}`,
-      issue
-    );
+  loadIssues(projectId: number): void {
+
+    this.issueService.getIssuesByProject(projectId).subscribe({
+
+      next: (response: any[]) => {
+        this.issues = response;
+      },
+
+      error: (error) => {
+        console.error(error);
+        this.errorMessage = 'Unable to load issues.';
+      }
+
+    });
   }
 
-  deleteIssue(issueId: number): Observable<any> {
-    return this.http.delete<any>(
-      `${this.apiUrl}/${issueId}`
-    );
+  updateStatus(issue: any, status: string): void {
+
+    const updatedIssue = {
+      ...issue,
+      status: status
+    };
+
+    this.issueService.updateIssue(issue.id, updatedIssue).subscribe({
+
+      next: (response) => {
+
+        issue.status = status;
+
+        console.log('Issue updated successfully', response);
+
+      },
+
+      error: (error) => {
+
+        console.error('Update failed', error);
+
+        this.errorMessage = 'Unable to update issue status.';
+
+      }
+
+    });
   }
+
 }
