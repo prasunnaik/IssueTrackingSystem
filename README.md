@@ -1,23 +1,526 @@
-<button
-  class="create-project-btn"
-  type="button"
-  (click)="createProject()">
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
-  + Create Project
+import { IssueService } from '../../services/issue.service';
+import { ProjectService } from '../../services/project.service';
 
-</button>
+import { Issue } from '../../models/issue';
+import { Project } from '../../models/project';
 
-.create-project-btn {
-  margin-right: 10px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 5px;
-  background: #1976d2;
-  color: white;
-  cursor: pointer;
+@Component({
+  selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
+})
+export class OwnerDashboardComponent implements OnInit {
+
+  // =========================================================
+  // OWNER
+  // =========================================================
+
+  // Change this when login/authentication is implemented
+  ownerId: number = 1;
+
+
+  // =========================================================
+  // PROJECTS
+  // =========================================================
+
+  projects: Project[] = [];
+
+  selectedProject: Project | null = null;
+
+
+  // =========================================================
+  // ISSUES
+  // =========================================================
+
+  issues: Issue[] = [];
+
+
+  // =========================================================
+  // FILTER
+  // =========================================================
+
+  selectedFilter: string = 'ALL';
+
+
+  // =========================================================
+  // ERROR
+  // =========================================================
+
+  errorMessage: string = '';
+
+
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
+
+  constructor(
+    private projectService: ProjectService,
+    private issueService: IssueService,
+    private router: Router
+  ) {}
+
+
+  // =========================================================
+  // INIT
+  // =========================================================
+
+  ngOnInit(): void {
+    this.loadProjects();
+  }
+
+
+  // =========================================================
+  // LOAD PROJECTS
+  // =========================================================
+
+  loadProjects(): void {
+
+    this.errorMessage = '';
+
+    this.projectService
+      .getProjectsByOwner(this.ownerId)
+      .subscribe({
+
+        next: (data: Project[]) => {
+
+          this.projects = data || [];
+
+          if (this.projects.length > 0) {
+
+            // Select first project automatically
+            this.selectedProject = this.projects[0];
+
+            this.loadIssues();
+
+          } else {
+
+            this.selectedProject = null;
+            this.issues = [];
+          }
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to load projects:',
+            error
+          );
+
+          this.errorMessage =
+            'Failed to load projects.';
+
+          this.projects = [];
+          this.selectedProject = null;
+          this.issues = [];
+        }
+      });
+  }
+
+
+  // =========================================================
+  // SELECT PROJECT
+  // =========================================================
+
+  selectProject(project: Project): void {
+
+    this.selectedProject = project;
+
+    this.selectedFilter = 'ALL';
+
+    this.issues = [];
+
+    this.errorMessage = '';
+
+    this.loadIssues();
+  }
+
+
+  // =========================================================
+  // LOAD ISSUES FOR SELECTED PROJECT
+  // =========================================================
+
+  loadIssues(): void {
+
+    if (
+      !this.selectedProject ||
+      this.selectedProject.id === undefined
+    ) {
+
+      this.issues = [];
+
+      return;
+    }
+
+    const projectId = this.selectedProject.id;
+
+    this.issueService
+      .getIssuesByProject(projectId)
+      .subscribe({
+
+        next: (data: Issue[]) => {
+
+          this.issues = data || [];
+
+          this.errorMessage = '';
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to load issues:',
+            error
+          );
+
+          this.issues = [];
+
+          this.errorMessage =
+            'Failed to load issues.';
+        }
+      });
+  }
+
+
+  // =========================================================
+  // REFRESH
+  // =========================================================
+
+  refreshDashboard(): void {
+
+    this.loadProjects();
+  }
+
+
+  // =========================================================
+  // CREATE PROJECT
+  // =========================================================
+
+  createProject(): void {
+
+    this.router.navigate([
+      '/create-project'
+    ]);
+  }
+
+
+  // =========================================================
+  // FILTER
+  // =========================================================
+
+  filterIssues(filter: string): void {
+
+    this.selectedFilter = filter;
+  }
+
+
+  // =========================================================
+  // FILTERED ISSUES
+  // =========================================================
+
+  get filteredIssues(): Issue[] {
+
+    if (this.selectedFilter === 'ALL') {
+      return this.issues;
+    }
+
+    if (this.selectedFilter === 'OPEN') {
+
+      return this.issues.filter(
+        issue => issue.status === 'OPEN'
+      );
+    }
+
+    if (this.selectedFilter === 'IN_PROGRESS') {
+
+      return this.issues.filter(
+        issue => issue.status === 'IN_PROGRESS'
+      );
+    }
+
+    if (this.selectedFilter === 'HIGH') {
+
+      return this.issues.filter(
+        issue => issue.priority === 'HIGH'
+      );
+    }
+
+    if (this.selectedFilter === 'MEDIUM') {
+
+      return this.issues.filter(
+        issue => issue.priority === 'MEDIUM'
+      );
+    }
+
+    if (this.selectedFilter === 'CLOSED') {
+
+      return this.issues.filter(
+        issue => issue.status === 'CLOSED'
+      );
+    }
+
+    return this.issues;
+  }
+
+
+  // =========================================================
+  // STATISTICS
+  // =========================================================
+
+  getTotalIssues(): number {
+
+    return this.issues.length;
+  }
+
+
+  getOpenIssues(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'OPEN'
+    ).length;
+  }
+
+
+  getHighPriorityIssues(): number {
+
+    return this.issues.filter(
+      issue => issue.priority === 'HIGH'
+    ).length;
+  }
+
+
+  getInProgressIssues(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    ).length;
+  }
+
+
+  getClosedIssues(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'CLOSED'
+    ).length;
+  }
+
+
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
+
+  updateStatus(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (issue.id === undefined) {
+
+      alert('Issue ID is missing.');
+
+      return;
+    }
+
+    const select =
+      event.target as HTMLSelectElement;
+
+    const status = select.value;
+
+    this.issueService
+      .updateIssueStatus(
+        issue.id,
+        status
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.status =
+            updatedIssue.status;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue status:',
+            error
+          );
+
+          alert(
+            'Failed to update issue status.'
+          );
+
+          // Reload to restore actual value
+          this.loadIssues();
+        }
+      });
+  }
+
+
+  // =========================================================
+  // UPDATE PRIORITY
+  // =========================================================
+
+  updatePriority(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (issue.id === undefined) {
+
+      alert('Issue ID is missing.');
+
+      return;
+    }
+
+    const select =
+      event.target as HTMLSelectElement;
+
+    const priority = select.value;
+
+    this.issueService
+      .updateIssuePriority(
+        issue.id,
+        priority
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.priority =
+            updatedIssue.priority;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue priority:',
+            error
+          );
+
+          alert(
+            'Failed to update issue priority.'
+          );
+
+          this.loadIssues();
+        }
+      });
+  }
+
+
+  // =========================================================
+  // UPDATE ASSIGNEE
+  // =========================================================
+
+  updateAssignee(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (issue.id === undefined) {
+
+      alert('Issue ID is missing.');
+
+      return;
+    }
+
+    const select =
+      event.target as HTMLSelectElement;
+
+    const assigneeId =
+      Number(select.value);
+
+    if (!assigneeId) {
+
+      alert(
+        'Please select a valid assignee.'
+      );
+
+      return;
+    }
+
+    this.issueService
+      .updateIssueAssignee(
+        issue.id,
+        assigneeId
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.assigneeId =
+            updatedIssue.assigneeId;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue assignee:',
+            error
+          );
+
+          alert(
+            'Failed to update issue assignee.'
+          );
+
+          this.loadIssues();
+        }
+      });
+  }
+
+
+  // =========================================================
+  // STATUS CSS CLASS
+  // =========================================================
+
+  getStatusClass(
+    status: string
+  ): string {
+
+    if (status === 'OPEN') {
+      return 'open';
+    }
+
+    if (status === 'IN_PROGRESS') {
+      return 'progress';
+    }
+
+    if (status === 'CLOSED') {
+      return 'closed';
+    }
+
+    return '';
+  }
+
+
+  // =========================================================
+  // PRIORITY CSS CLASS
+  // =========================================================
+
+  getPriorityClass(
+    priority: string
+  ): string {
+
+    if (priority === 'HIGH') {
+      return 'high';
+    }
+
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
+
+    if (priority === 'LOW') {
+      return 'low';
+    }
+
+    return '';
+  }
 }
-
-.create-project-btn:hover {
-  background: #125aa0;
-}
-
