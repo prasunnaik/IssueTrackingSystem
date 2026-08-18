@@ -1,327 +1,427 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+<div class="dashboard">
 
-import { Project } from '../../models/project';
-import { Issue } from '../../models/issue';
+  <!-- ===================================== -->
+  <!-- PAGE HEADER -->
+  <!-- ===================================== -->
 
-import { ProjectService } from '../../services/project.service';
-import { IssueService } from '../../services/issue.service';
+  <div class="dashboard-header">
 
-@Component({
-  selector: 'app-owner-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './owner-dashboard.component.html',
-  styleUrls: ['./owner-dashboard.component.css']
-})
-export class OwnerDashboardComponent implements OnInit {
+    <div>
+      <h1>Project Owner Dashboard</h1>
 
-  project: Project | null = null;
+      <p>
+        Manage your projects and track issues
+      </p>
+    </div>
 
-  issues: Issue[] = [];
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="refresh()">
 
-  filteredIssues: Issue[] = [];
+      Refresh
 
-  selectedFilter: string = 'ALL';
+    </button>
 
-  errorMessage: string = '';
+  </div>
 
-  // Change this if your owner/project ID is different
-  ownerId: number = 1;
 
-  constructor(
-    private projectService: ProjectService,
-    private issueService: IssueService
-  ) {}
+  <!-- ===================================== -->
+  <!-- ERROR MESSAGE -->
+  <!-- ===================================== -->
 
-  ngOnInit(): void {
-    this.loadDashboard();
-  }
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
 
-  loadDashboard(): void {
+    {{ errorMessage }}
 
-    this.errorMessage = '';
+  </div>
 
-    /*
-     * If your existing project-loading code already works,
-     * keep that code here.
-     *
-     * The dashboard currently uses Project ID 3.
-     */
-    this.loadProject(3);
-  }
 
-  loadProject(projectId: number): void {
+  <!-- ===================================== -->
+  <!-- PROJECT CARD -->
+  <!-- ===================================== -->
 
-    this.projectService.getProjectById(projectId)
-      .subscribe({
-        next: (response: Project) => {
+  <div
+    class="project-card"
+    *ngIf="project">
 
-          this.project = response;
+    <!-- PROJECT HEADER -->
 
-          this.loadIssues(projectId);
-        },
+    <div class="project-header">
 
-        error: (error) => {
+      <div>
 
-          console.error(
-            'Failed to load project:',
-            error
-          );
+        <h2>
+          {{ project.name }}
+        </h2>
 
-          this.errorMessage =
-            'Failed to load project.';
-        }
-      });
-  }
+        <p>
+          Project ID:
+          {{ project.id }}
+        </p>
 
-  loadIssues(projectId: number): void {
+      </div>
 
-    this.issueService.getIssuesByProject(projectId)
-      .subscribe({
-        next: (response: Issue[]) => {
+      <div class="project-dates">
 
-          this.issues = response;
+        <p>
+          <strong>Start:</strong>
+          {{ project.startDate }}
+        </p>
 
-          this.filteredIssues = response;
-        },
+        <p>
+          <strong>End:</strong>
+          {{ project.endDate }}
+        </p>
 
-        error: (error) => {
+      </div>
 
-          console.error(
-            'Failed to load issues:',
-            error
-          );
+    </div>
 
-          this.errorMessage =
-            'Failed to load issues.';
-        }
-      });
-  }
 
-  refresh(): void {
+    <!-- ================================= -->
+    <!-- STATISTICS -->
+    <!-- ================================= -->
 
-    if (this.project) {
+    <div class="statistics">
 
-      this.loadIssues(
-        this.project.id
-      );
+      <!-- TOTAL -->
 
-    } else {
+      <div class="stat-card">
 
-      this.loadProject(3);
-    }
-  }
+        <h3>
+          {{ getTotalIssues() }}
+        </h3>
 
-  // ==========================================
-  // FILTERS
-  // ==========================================
+        <p>
+          Total Issues
+        </p>
 
-  filterIssues(filter: string): void {
+      </div>
 
-    this.selectedFilter = filter;
 
-    switch (filter) {
+      <!-- OPEN -->
 
-      case 'OPEN':
+      <div class="stat-card">
 
-        this.filteredIssues = this.issues.filter(
-          issue => issue.status === 'OPEN'
-        );
+        <h3>
+          {{ getOpenIssues() }}
+        </h3>
 
-        break;
+        <p>
+          Open Issues
+        </p>
 
-      case 'IN_PROGRESS':
+      </div>
 
-        this.filteredIssues = this.issues.filter(
-          issue => issue.status === 'IN_PROGRESS'
-        );
 
-        break;
+      <!-- HIGH PRIORITY -->
 
-      case 'HIGH':
+      <div class="stat-card">
 
-        this.filteredIssues = this.issues.filter(
-          issue => issue.priority === 'HIGH'
-        );
+        <h3>
+          {{ getHighPriorityIssues() }}
+        </h3>
 
-        break;
+        <p>
+          High Priority
+        </p>
 
-      case 'MEDIUM':
+      </div>
 
-        this.filteredIssues = this.issues.filter(
-          issue => issue.priority === 'MEDIUM'
-        );
 
-        break;
+      <!-- IN PROGRESS -->
 
-      case 'CLOSED':
+      <div class="stat-card">
 
-        this.filteredIssues = this.issues.filter(
-          issue => issue.status === 'CLOSED'
-        );
+        <h3>
+          {{ getInProgressIssues() }}
+        </h3>
 
-        break;
+        <p>
+          In Progress
+        </p>
 
-      case 'ALL':
+      </div>
 
-      default:
 
-        this.filteredIssues = this.issues;
+      <!-- CLOSED -->
 
-        break;
-    }
-  }
+      <div class="stat-card">
 
-  // ==========================================
-  // STATISTICS
-  // ==========================================
+        <h3>
+          {{ getClosedIssues() }}
+        </h3>
 
-  getTotalIssues(): number {
+        <p>
+          Closed
+        </p>
 
-    return this.issues.length;
-  }
+      </div>
 
-  getOpenIssues(): number {
+    </div>
 
-    return this.issues.filter(
-      issue => issue.status === 'OPEN'
-    ).length;
-  }
 
-  getHighPriorityIssues(): number {
+    <!-- ================================= -->
+    <!-- FILTER BUTTONS -->
+    <!-- ================================= -->
 
-    return this.issues.filter(
-      issue => issue.priority === 'HIGH'
-    ).length;
-  }
+    <div class="filters">
 
-  getInProgressIssues(): number {
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'ALL'"
+        (click)="filterIssues('ALL')">
 
-    return this.issues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    ).length;
-  }
+        All
 
-  getClosedIssues(): number {
+      </button>
 
-    return this.issues.filter(
-      issue => issue.status === 'CLOSED'
-    ).length;
-  }
 
-  // ==========================================
-  // STATUS UPDATE
-  // ==========================================
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'OPEN'"
+        (click)="filterIssues('OPEN')">
 
-  updateStatus(
-    issue: Issue,
-    status: string
-  ): void {
+        Open
 
-    this.issueService
-      .updateIssueStatus(issue.id, status)
-      .subscribe({
+      </button>
 
-        next: (response: Issue) => {
 
-          issue.status = response.status;
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'IN_PROGRESS'"
+        (click)="filterIssues('IN_PROGRESS')">
 
-          this.filterIssues(
-            this.selectedFilter
-          );
-        },
+        In Progress
 
-        error: (error) => {
+      </button>
 
-          console.error(
-            'Failed to update issue status:',
-            error
-          );
 
-          alert(
-            'Failed to update issue status.'
-          );
-        }
-      });
-  }
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'HIGH'"
+        (click)="filterIssues('HIGH')">
 
-  // ==========================================
-  // PRIORITY UPDATE
-  // ==========================================
+        High Priority
 
-  updatePriority(
-    issue: Issue,
-    priority: string
-  ): void {
+      </button>
 
-    this.issueService
-      .updateIssuePriority(
-        issue.id,
-        priority
-      )
-      .subscribe({
 
-        next: (response: Issue) => {
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'MEDIUM'"
+        (click)="filterIssues('MEDIUM')">
 
-          issue.priority = response.priority;
+        Medium
 
-          this.filterIssues(
-            this.selectedFilter
-          );
-        },
+      </button>
 
-        error: (error) => {
 
-          console.error(
-            'Failed to update issue priority:',
-            error
-          );
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'CLOSED'"
+        (click)="filterIssues('CLOSED')">
 
-          alert(
-            'Failed to update issue priority.'
-          );
-        }
-      });
-  }
+        Closed
 
-  // ==========================================
-  // ASSIGNEE UPDATE
-  // ==========================================
+      </button>
 
-  updateAssignee(
-    issue: Issue,
-    assigneeId: number
-  ): void {
+    </div>
 
-    this.issueService
-      .updateIssueAssignee(
-        issue.id,
-        assigneeId
-      )
-      .subscribe({
 
-        next: (response: Issue) => {
+    <!-- ================================= -->
+    <!-- ISSUES -->
+    <!-- ================================= -->
 
-          issue.assigneeId =
-            response.assigneeId;
-        },
+    <div class="issues-section">
 
-        error: (error) => {
+      <h2>
+        Issues
+      </h2>
 
-          console.error(
-            'Failed to update issue assignee:',
-            error
-          );
 
-          alert(
-            'Failed to update issue assignee.'
-          );
-        }
-      });
-  }
-}
+      <!-- ISSUE CARD -->
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of filteredIssues">
+
+
+        <!-- ISSUE DETAILS -->
+
+        <div class="issue-details">
+
+          <h3>
+            {{ issue.title }}
+          </h3>
+
+
+          <p>
+            <strong>Issue ID:</strong>
+            {{ issue.id }}
+          </p>
+
+
+          <p>
+            <strong>Description:</strong>
+            {{ issue.description }}
+          </p>
+
+
+          <div class="issue-info">
+
+            <!-- PRIORITY -->
+
+            <span>
+
+              <strong>Priority:</strong>
+
+              <select
+                [ngModel]="issue.priority"
+                (ngModelChange)="
+                  updatePriority(issue, $event)
+                ">
+
+                <option value="LOW">
+                  LOW
+                </option>
+
+                <option value="MEDIUM">
+                  MEDIUM
+                </option>
+
+                <option value="HIGH">
+                  HIGH
+                </option>
+
+              </select>
+
+            </span>
+
+
+            <!-- TYPE -->
+
+            <span>
+
+              <strong>Type:</strong>
+
+              {{ issue.type }}
+
+            </span>
+
+
+            <!-- ASSIGNEE -->
+
+            <span>
+
+              <strong>Assignee:</strong>
+
+              <select
+                [ngModel]="issue.assigneeId"
+                (ngModelChange)="
+                  updateAssignee(
+                    issue,
+                    +$event
+                  )
+                ">
+
+                <option value="1">
+                  1
+                </option>
+
+                <option value="2">
+                  2
+                </option>
+
+                <option value="3">
+                  3
+                </option>
+
+                <option value="4">
+                  4
+                </option>
+
+              </select>
+
+            </span>
+
+
+            <!-- STORY POINTS -->
+
+            <span>
+
+              <strong>Story Points:</strong>
+
+              {{ issue.storyPoints }}
+
+            </span>
+
+          </div>
+
+
+          <!-- STATUS -->
+
+          <div class="status-update">
+
+            <strong>
+              Update Status:
+            </strong>
+
+
+            <select
+              [ngModel]="issue.status"
+              (ngModelChange)="
+                updateStatus(
+                  issue,
+                  $event
+                )
+              ">
+
+              <option value="OPEN">
+                OPEN
+              </option>
+
+              <option value="IN_PROGRESS">
+                IN_PROGRESS
+              </option>
+
+              <option value="CLOSED">
+                CLOSED
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <!-- CURRENT STATUS -->
+
+        <div class="issue-status">
+
+          {{ issue.status }}
+
+        </div>
+
+      </div>
+
+
+      <!-- NO ISSUES -->
+
+      <div
+        class="no-issues"
+        *ngIf="filteredIssues.length === 0">
+
+        No issues found for this filter.
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
