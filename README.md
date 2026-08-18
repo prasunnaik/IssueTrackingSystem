@@ -1,15 +1,10 @@
-@PutMapping("/{issueId}/priority")
-public ResponseEntity<Issue> updateIssuePriority(
-        @PathVariable Long issueId,
-        @RequestBody Map<String, String> request) {
+updateIssuePriority(
+  issueId: number,
+  priority: string
+): Observable<any> {
 
-    String priority = request.get("priority");
-
-    Issue updatedIssue =
-            issueService.updateIssuePriority(issueId, priority);
-
-    return new ResponseEntity<>(
-            updatedIssue,
-            HttpStatus.OK
-    );
-}
+  return this.http.put(
+    `${this.apiUrl}/${issueId}/priority`,
+    { priority: priority }
+  );
+} 
