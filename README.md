@@ -1,25 +1,36 @@
-<span>
-  <strong>Priority:</strong>
+@Override
+public Issue updateIssueAssignee(Long issueId, Long assigneeId) {
 
-  <select
-    [value]="issue.priority"
-    (change)="updatePriority(
-      issue,
-      $any($event.target).value
-    )">
+    Issue issue = issueRepository.findById(issueId)
+            .orElseThrow(() ->
+                    new RuntimeException("Issue not found: " + issueId));
 
-    <option value="HIGH">
-      HIGH
-    </option>
+    issue.setAssigneeId(assigneeId);
 
-    <option value="MEDIUM">
-      MEDIUM
-    </option>
+    return issueRepository.save(issue);
+}
 
-    <option value="LOW">
-      LOW
-    </option>
+@PutMapping("/{issueId}/assignee/{assigneeId}")
+public ResponseEntity<Issue> updateIssueAssignee(
+        @PathVariable Long issueId,
+        @PathVariable Long assigneeId) {
 
-  </select>
+    return new ResponseEntity<>(
+            issueService.updateIssueAssignee(issueId, assigneeId),
+            HttpStatus.OK
+    );
+}
 
-</span>
+
+
+
+updateIssueAssignee(
+  issueId: number,
+  assigneeId: number
+): Observable<any> {
+
+  return this.http.put<any>(
+    `${this.apiUrl}/${issueId}/assignee/${assigneeId}`,
+    {}
+  );
+}
