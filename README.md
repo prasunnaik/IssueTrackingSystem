@@ -25,7 +25,6 @@ export class OwnerDashboardComponent implements OnInit {
   // OWNER
   // =========================================================
 
-  // Change this when login/authentication is implemented
   ownerId: number = 1;
 
 
@@ -36,6 +35,20 @@ export class OwnerDashboardComponent implements OnInit {
   projects: Project[] = [];
 
   selectedProject: Project | null = null;
+
+
+  // =========================================================
+  // EDIT PROJECT
+  // =========================================================
+
+  editMode: boolean = false;
+
+  editProjectData: Project = {
+    projectName: '',
+    productOwnerId: 1,
+    startDate: '',
+    endDate: ''
+  };
 
 
   // =========================================================
@@ -53,10 +66,12 @@ export class OwnerDashboardComponent implements OnInit {
 
 
   // =========================================================
-  // ERROR
+  // ERROR / SUCCESS
   // =========================================================
 
   errorMessage: string = '';
+
+  successMessage: string = '';
 
 
   // =========================================================
@@ -97,8 +112,34 @@ export class OwnerDashboardComponent implements OnInit {
 
           if (this.projects.length > 0) {
 
-            // Select first project automatically
-            this.selectedProject = this.projects[0];
+            if (
+              this.selectedProject &&
+              this.selectedProject.id !== undefined
+            ) {
+
+              const existingProject =
+                this.projects.find(
+                  project =>
+                    project.id ===
+                    this.selectedProject?.id
+                );
+
+              if (existingProject) {
+
+                this.selectedProject =
+                  existingProject;
+
+              } else {
+
+                this.selectedProject =
+                  this.projects[0];
+              }
+
+            } else {
+
+              this.selectedProject =
+                this.projects[0];
+            }
 
             this.loadIssues();
 
@@ -141,12 +182,14 @@ export class OwnerDashboardComponent implements OnInit {
 
     this.errorMessage = '';
 
+    this.editMode = false;
+
     this.loadIssues();
   }
 
 
   // =========================================================
-  // LOAD ISSUES FOR SELECTED PROJECT
+  // LOAD ISSUES
   // =========================================================
 
   loadIssues(): void {
@@ -161,7 +204,8 @@ export class OwnerDashboardComponent implements OnInit {
       return;
     }
 
-    const projectId = this.selectedProject.id;
+    const projectId =
+      this.selectedProject.id;
 
     this.issueService
       .getIssuesByProject(projectId)
@@ -196,6 +240,10 @@ export class OwnerDashboardComponent implements OnInit {
 
   refreshDashboard(): void {
 
+    this.editMode = false;
+
+    this.successMessage = '';
+
     this.loadProjects();
   }
 
@@ -213,10 +261,231 @@ export class OwnerDashboardComponent implements OnInit {
 
 
   // =========================================================
+  // START EDITING PROJECT
+  // =========================================================
+
+  startEditProject(): void {
+
+    if (!this.selectedProject) {
+
+      alert('Please select a project.');
+
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.editProjectData = {
+      id: this.selectedProject.id,
+      projectName:
+        this.selectedProject.projectName,
+      productOwnerId:
+        this.selectedProject.productOwnerId,
+      startDate:
+        this.selectedProject.startDate,
+      endDate:
+        this.selectedProject.endDate
+    };
+
+    this.editMode = true;
+  }
+
+
+  // =========================================================
+  // CANCEL EDIT
+  // =========================================================
+
+  cancelEditProject(): void {
+
+    this.editMode = false;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+
+  // =========================================================
+  // SAVE EDITED PROJECT
+  // =========================================================
+
+  saveProject(): void {
+
+    if (
+      !this.editProjectData.id
+    ) {
+
+      this.errorMessage =
+        'Project ID is missing.';
+
+      return;
+    }
+
+    if (
+      !this.editProjectData.projectName ||
+      !this.editProjectData.projectName.trim()
+    ) {
+
+      this.errorMessage =
+        'Project name is required.';
+
+      return;
+    }
+
+    if (
+      !this.editProjectData.productOwnerId
+    ) {
+
+      this.errorMessage =
+        'Product owner ID is required.';
+
+      return;
+    }
+
+    if (
+      !this.editProjectData.startDate
+    ) {
+
+      this.errorMessage =
+        'Start date is required.';
+
+      return;
+    }
+
+    if (
+      !this.editProjectData.endDate
+    ) {
+
+      this.errorMessage =
+        'End date is required.';
+
+      return;
+    }
+
+    if (
+      this.editProjectData.endDate <
+      this.editProjectData.startDate
+    ) {
+
+      this.errorMessage =
+        'End date cannot be before start date.';
+
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const projectId =
+      this.editProjectData.id;
+
+    this.projectService
+      .updateProject(
+        projectId,
+        this.editProjectData
+      )
+      .subscribe({
+
+        next: (updatedProject: Project) => {
+
+          this.successMessage =
+            'Project updated successfully.';
+
+          this.editMode = false;
+
+          this.selectedProject =
+            updatedProject;
+
+          this.loadProjects();
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update project:',
+            error
+          );
+
+          this.errorMessage =
+            'Failed to update project.';
+        }
+      });
+  }
+
+
+  // =========================================================
+  // DELETE PROJECT
+  // =========================================================
+
+  deleteProject(): void {
+
+    if (
+      !this.selectedProject ||
+      this.selectedProject.id === undefined
+    ) {
+
+      alert('Please select a project.');
+
+      return;
+    }
+
+    const projectName =
+      this.selectedProject.projectName;
+
+    const projectId =
+      this.selectedProject.id;
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete "${projectName}"?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.projectService
+      .deleteProject(projectId)
+      .subscribe({
+
+        next: () => {
+
+          this.successMessage =
+            'Project deleted successfully.';
+
+          this.selectedProject = null;
+
+          this.issues = [];
+
+          this.editMode = false;
+
+          this.loadProjects();
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to delete project:',
+            error
+          );
+
+          this.errorMessage =
+            'Failed to delete project.';
+        }
+      });
+  }
+
+
+  // =========================================================
   // FILTER
   // =========================================================
 
-  filterIssues(filter: string): void {
+  filterIssues(
+    filter: string
+  ): void {
 
     this.selectedFilter = filter;
   }
@@ -228,42 +497,60 @@ export class OwnerDashboardComponent implements OnInit {
 
   get filteredIssues(): Issue[] {
 
-    if (this.selectedFilter === 'ALL') {
+    if (
+      this.selectedFilter === 'ALL'
+    ) {
+
       return this.issues;
     }
 
-    if (this.selectedFilter === 'OPEN') {
+    if (
+      this.selectedFilter === 'OPEN'
+    ) {
 
       return this.issues.filter(
-        issue => issue.status === 'OPEN'
+        issue =>
+          issue.status === 'OPEN'
       );
     }
 
-    if (this.selectedFilter === 'IN_PROGRESS') {
+    if (
+      this.selectedFilter === 'IN_PROGRESS'
+    ) {
 
       return this.issues.filter(
-        issue => issue.status === 'IN_PROGRESS'
+        issue =>
+          issue.status === 'IN_PROGRESS'
       );
     }
 
-    if (this.selectedFilter === 'HIGH') {
+    if (
+      this.selectedFilter === 'HIGH'
+    ) {
 
       return this.issues.filter(
-        issue => issue.priority === 'HIGH'
+        issue =>
+          issue.priority === 'HIGH'
       );
     }
 
-    if (this.selectedFilter === 'MEDIUM') {
+    if (
+      this.selectedFilter === 'MEDIUM'
+    ) {
 
       return this.issues.filter(
-        issue => issue.priority === 'MEDIUM'
+        issue =>
+          issue.priority === 'MEDIUM'
       );
     }
 
-    if (this.selectedFilter === 'CLOSED') {
+    if (
+      this.selectedFilter === 'CLOSED'
+    ) {
 
       return this.issues.filter(
-        issue => issue.status === 'CLOSED'
+        issue =>
+          issue.status === 'CLOSED'
       );
     }
 
@@ -284,7 +571,8 @@ export class OwnerDashboardComponent implements OnInit {
   getOpenIssues(): number {
 
     return this.issues.filter(
-      issue => issue.status === 'OPEN'
+      issue =>
+        issue.status === 'OPEN'
     ).length;
   }
 
@@ -292,7 +580,8 @@ export class OwnerDashboardComponent implements OnInit {
   getHighPriorityIssues(): number {
 
     return this.issues.filter(
-      issue => issue.priority === 'HIGH'
+      issue =>
+        issue.priority === 'HIGH'
     ).length;
   }
 
@@ -300,7 +589,8 @@ export class OwnerDashboardComponent implements OnInit {
   getInProgressIssues(): number {
 
     return this.issues.filter(
-      issue => issue.status === 'IN_PROGRESS'
+      issue =>
+        issue.status === 'IN_PROGRESS'
     ).length;
   }
 
@@ -308,7 +598,8 @@ export class OwnerDashboardComponent implements OnInit {
   getClosedIssues(): number {
 
     return this.issues.filter(
-      issue => issue.status === 'CLOSED'
+      issue =>
+        issue.status === 'CLOSED'
     ).length;
   }
 
@@ -322,7 +613,9 @@ export class OwnerDashboardComponent implements OnInit {
     event: Event
   ): void {
 
-    if (issue.id === undefined) {
+    if (
+      issue.id === undefined
+    ) {
 
       alert('Issue ID is missing.');
 
@@ -332,7 +625,8 @@ export class OwnerDashboardComponent implements OnInit {
     const select =
       event.target as HTMLSelectElement;
 
-    const status = select.value;
+    const status =
+      select.value;
 
     this.issueService
       .updateIssueStatus(
@@ -358,7 +652,6 @@ export class OwnerDashboardComponent implements OnInit {
             'Failed to update issue status.'
           );
 
-          // Reload to restore actual value
           this.loadIssues();
         }
       });
@@ -374,7 +667,9 @@ export class OwnerDashboardComponent implements OnInit {
     event: Event
   ): void {
 
-    if (issue.id === undefined) {
+    if (
+      issue.id === undefined
+    ) {
 
       alert('Issue ID is missing.');
 
@@ -384,7 +679,8 @@ export class OwnerDashboardComponent implements OnInit {
     const select =
       event.target as HTMLSelectElement;
 
-    const priority = select.value;
+    const priority =
+      select.value;
 
     this.issueService
       .updateIssuePriority(
@@ -425,7 +721,9 @@ export class OwnerDashboardComponent implements OnInit {
     event: Event
   ): void {
 
-    if (issue.id === undefined) {
+    if (
+      issue.id === undefined
+    ) {
 
       alert('Issue ID is missing.');
 
@@ -478,7 +776,7 @@ export class OwnerDashboardComponent implements OnInit {
 
 
   // =========================================================
-  // STATUS CSS CLASS
+  // STATUS CLASS
   // =========================================================
 
   getStatusClass(
@@ -502,7 +800,7 @@ export class OwnerDashboardComponent implements OnInit {
 
 
   // =========================================================
-  // PRIORITY CSS CLASS
+  // PRIORITY CLASS
   // =========================================================
 
   getPriorityClass(
