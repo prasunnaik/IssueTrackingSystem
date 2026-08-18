@@ -1,23 +1,19 @@
-<div class="dashboard">
-  <h1>Project Owner Dashboard</h1>
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-  <p *ngIf="errorMessage" class="error">
-    {{ errorMessage }}
-  </p>
+@Injectable({
+  providedIn: 'root'
+})
+export class IssueService {
 
-  <div *ngIf="projects.length === 0 && !errorMessage">
-    No projects found.
-  </div>
+  private apiUrl = 'http://localhost:8083/api/issues';
 
-  <div class="project-list" *ngIf="projects.length > 0">
-    <div class="project-card" *ngFor="let project of projects">
+  constructor(private http: HttpClient) {}
 
-      <h2>{{ project.projectName }}</h2>
-
-      <p><strong>Project ID:</strong> {{ project.id }}</p>
-      <p><strong>Start Date:</strong> {{ project.startDate }}</p>
-      <p><strong>End Date:</strong> {{ project.endDate }}</p>
-
-    </div>
-  </div>
-</div>
+  getIssuesByProject(projectId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/project/${projectId}`
+    );
+  }
+}
