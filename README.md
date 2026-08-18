@@ -1,19 +1,19 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+package com.its.issue.config;
 
-@Injectable({
-  providedIn: 'root'
-})
-export class IssueService {
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-  private apiUrl = 'http://localhost:8083/api/issues';
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
 
-  constructor(private http: HttpClient) {}
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
 
-  getIssuesByProject(projectId: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      `${this.apiUrl}/project/${projectId}`
-    );
-  }
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:4300")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+    }
 }
