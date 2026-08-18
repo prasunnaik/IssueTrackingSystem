@@ -1,96 +1,202 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+<div class="dashboard">
 
-import { ProjectService } from '../../services/project.service';
-import { IssueService } from '../../services/issue.service';
+  <h1>Project Owner Dashboard</h1>
 
-@Component({
-  selector: 'app-owner-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './owner-dashboard.component.html',
-  styleUrls: ['./owner-dashboard.component.css']
-})
-export class OwnerDashboardComponent implements OnInit {
+  <p class="subtitle">
+    Manage your projects and track issues
+  </p>
 
-  projects: any[] = [];
-  issues: any[] = [];
+  <p *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </p>
 
-  errorMessage = '';
+  <button class="refresh-btn" (click)="loadProjects()">
+    Refresh
+  </button>
 
-  constructor(
-    private projectService: ProjectService,
-    private issueService: IssueService
-  ) {}
+  <div *ngIf="projects.length > 0">
 
-  ngOnInit(): void {
-    this.loadProjects();
-  }
+    <div
+      class="project-card"
+      *ngFor="let project of projects"
+    >
 
-  loadProjects(): void {
+      <div class="project-header">
 
-    this.projectService.getProjectsByOwner(1).subscribe({
+        <div>
+          <h2>{{ project.projectName }}</h2>
 
-      next: (response: any[]) => {
+          <p>
+            Project ID: {{ project.id }}
+          </p>
+        </div>
 
-        this.projects = response;
+        <div class="dates">
 
-        if (this.projects.length > 0) {
-          this.loadIssues(this.projects[0].id);
-        }
+          <p>
+            <strong>Start:</strong>
+            {{ project.startDate }}
+          </p>
 
-      },
+          <p>
+            <strong>End:</strong>
+            {{ project.endDate }}
+          </p>
 
-      error: (error) => {
-        console.error(error);
-        this.errorMessage = 'Unable to load projects.';
-      }
+        </div>
 
-    });
-  }
+      </div>
 
-  loadIssues(projectId: number): void {
 
-    this.issueService.getIssuesByProject(projectId).subscribe({
+      <!-- SUMMARY -->
 
-      next: (response: any[]) => {
-        this.issues = response;
-      },
+      <div class="summary">
 
-      error: (error) => {
-        console.error(error);
-        this.errorMessage = 'Unable to load issues.';
-      }
+        <div class="summary-card">
 
-    });
-  }
+          <h3>{{ issues.length }}</h3>
 
-  updateStatus(issue: any, status: string): void {
+          <span>Total Issues</span>
 
-    const updatedIssue = {
-      ...issue,
-      status: status
-    };
+        </div>
 
-    this.issueService.updateIssue(issue.id, updatedIssue).subscribe({
 
-      next: (response) => {
+        <div class="summary-card">
 
-        issue.status = status;
+          <h3>
+            {{
+              (issues | filterStatus:'OPEN').length
+            }}
+          </h3>
 
-        console.log('Issue updated successfully', response);
+          <span>Open Issues</span>
 
-      },
+        </div>
 
-      error: (error) => {
 
-        console.error('Update failed', error);
+        <div class="summary-card">
 
-        this.errorMessage = 'Unable to update issue status.';
+          <h3>
+            {{
+              (issues | filterPriority:'HIGH').length
+            }}
+          </h3>
 
-      }
+          <span>High Priority</span>
 
-    });
-  }
+        </div>
 
-}
+      </div>
+
+
+      <!-- ISSUES -->
+
+      <h3 class="issues-title">
+        Issues
+      </h3>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of issues"
+      >
+
+        <div class="issue-header">
+
+          <h4>
+            {{ issue.summary }}
+          </h4>
+
+          <span class="status">
+            {{ issue.status }}
+          </span>
+
+        </div>
+
+
+        <p>
+          <strong>Issue ID:</strong>
+          {{ issue.id }}
+        </p>
+
+
+        <p>
+          <strong>Description:</strong>
+          {{ issue.description }}
+        </p>
+
+
+        <div class="issue-details">
+
+          <span>
+            <strong>Priority:</strong>
+            {{ issue.priority }}
+          </span>
+
+          <span>
+            <strong>Type:</strong>
+            {{ issue.type }}
+          </span>
+
+          <span>
+            <strong>Assignee:</strong>
+            {{ issue.assigneeId }}
+          </span>
+
+          <span>
+            <strong>Story Points:</strong>
+            {{ issue.storyPoint }}
+          </span>
+
+        </div>
+
+
+        <!-- STATUS UPDATE -->
+
+        <div class="status-update">
+
+          <label>
+            Update Status:
+          </label>
+
+          <select
+            [value]="issue.status"
+            (change)="updateStatus(issue, $any($event.target).value)"
+          >
+
+            <option value="OPEN">
+              OPEN
+            </option>
+
+            <option value="IN_PROGRESS">
+              IN_PROGRESS
+            </option>
+
+            <option value="CLOSED">
+              CLOSED
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <p *ngIf="issues.length === 0">
+        No issues found for this project.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="projects.length === 0 && !errorMessage"
+    class="no-projects"
+  >
+    No projects found.
+  </div>
+
+</div>
