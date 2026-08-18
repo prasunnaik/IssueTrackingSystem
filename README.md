@@ -1,407 +1,253 @@
-<div class="dashboard">
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-  <!-- ===================================================== -->
-  <!-- HEADER -->
-  <!-- ===================================================== -->
+@Injectable({
+  providedIn: 'root'
+})
+export class IssueService {
 
-  <div class="dashboard-header">
+  private apiUrl = 'http://localhost:8083/api/issues';
 
-    <div>
-      <h1>Project Owner Dashboard</h1>
-      <p>Manage your projects and track issues</p>
-    </div>
+  constructor(
+    private http: HttpClient
+  ) {}
 
-    <button
-      class="refresh-btn"
-      (click)="refreshDashboard()">
-      Refresh
-    </button>
+  getIssuesByProject(
+    projectId: number
+  ): Observable<any[]> {
 
-  </div>
+    return this.http.get<any[]>(
+      `${this.apiUrl}/project/${projectId}`
+    );
 
+  }
 
-  <!-- ===================================================== -->
-  <!-- ERROR MESSAGE -->
-  <!-- ===================================================== -->
 
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
+  getIssueById(
+    issueId: number
+  ): Observable<any> {
 
-    {{ errorMessage }}
+    return this.http.get<any>(
+      `${this.apiUrl}/${issueId}`
+    );
 
-  </div>
+  }
 
 
-  <!-- ===================================================== -->
-  <!-- PROJECT CARD -->
-  <!-- ===================================================== -->
+  updateIssue(
+    issueId: number,
+    issue: any
+  ): Observable<any> {
 
-  <div class="project-card">
+    return this.http.put<any>(
+      `${this.apiUrl}/${issueId}`,
+      issue
+    );
 
-    <!-- PROJECT HEADER -->
+  }
 
-    <div class="project-header">
 
-      <div>
+  deleteIssue(
+    issueId: number
+  ): Observable<any> {
 
-        <h2>
-          {{ project.projectName }}
-        </h2>
+    return this.http.delete<any>(
+      `${this.apiUrl}/${issueId}`
+    );
 
-        <p>
-          Project ID:
-          {{ project.id }}
-        </p>
+  }
 
-      </div>
+  updateIssueStatus(issueId: number, status: string): Observable<any> {
+  return this.http.put(
+    `${this.apiUrl}/${issueId}/status`,
+    { status: status }
+  );
+}
 
-      <div class="project-dates">
+  updateIssuePriority(
+  issueId: number,
+  priority: string
+): Observable<any> {
 
-        <div>
-          <strong>Start:</strong>
-          {{ project.startDate }}
-        </div>
+  return this.http.put(
+    `${this.apiUrl}/${issueId}/priority`,
+    { priority: priority }
+  );
+} 
 
-        <div>
-          <strong>End:</strong>
-          {{ project.endDate }}
-        </div>
+  updateIssueAssignee(
+  issueId: number,
+  assigneeId: number
+): Observable<any> {
 
-      </div>
+  return this.http.put<any>(
+    `${this.apiUrl}/${issueId}/assignee/${assigneeId}`,
+    {}
+  );
+}
 
-    </div>
+}
 
+package com.its.issue.controller;
 
-    <!-- ================================================= -->
-    <!-- STATISTICS -->
-    <!-- ================================================= -->
+import java.util.List;
+import java.util.Map;
 
-    <div class="stats">
-
-      <div class="stat-card">
-
-        <div class="stat-number">
-          {{ getTotalIssues() }}
-        </div>
-
-        <div class="stat-label">
-          Total Issues
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-number">
-          {{ getOpenIssues() }}
-        </div>
-
-        <div class="stat-label">
-          Open Issues
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-number">
-          {{ getHighPriorityIssues() }}
-        </div>
-
-        <div class="stat-label">
-          High Priority
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-number">
-          {{ getInProgressIssues() }}
-        </div>
-
-        <div class="stat-label">
-          In Progress
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-number">
-          {{ getClosedIssues() }}
-        </div>
-
-        <div class="stat-label">
-          Closed
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- FILTER BUTTONS -->
-    <!-- ================================================= -->
-
-    <div class="filters">
-
-      <button
-        [class.active]="selectedFilter === 'ALL'"
-        (click)="filterIssues('ALL')">
-
-        All
-
-      </button>
-
-
-      <button
-        [class.active]="selectedFilter === 'OPEN'"
-        (click)="filterIssues('OPEN')">
-
-        Open
-
-      </button>
-
-
-      <button
-        [class.active]="selectedFilter === 'IN_PROGRESS'"
-        (click)="filterIssues('IN_PROGRESS')">
-
-        In Progress
-
-      </button>
-
-
-      <button
-        [class.active]="selectedFilter === 'HIGH'"
-        (click)="filterIssues('HIGH')">
-
-        High Priority
-
-      </button>
-
-
-      <button
-        [class.active]="selectedFilter === 'MEDIUM'"
-        (click)="filterIssues('MEDIUM')">
-
-        Medium
-
-      </button>
-
-
-      <button
-        [class.active]="selectedFilter === 'CLOSED'"
-        (click)="filterIssues('CLOSED')">
-
-        Closed
-
-      </button>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- ISSUES SECTION -->
-    <!-- ================================================= -->
-
-    <div class="issues-section">
-
-      <h2>Issues</h2>
-
-
-      <!-- NO ISSUES -->
-
-      <div
-        class="no-issues"
-        *ngIf="filteredIssues.length === 0">
-
-        No issues found.
-
-      </div>
-
-
-      <!-- ================================================= -->
-      <!-- ISSUE CARD -->
-      <!-- ================================================= -->
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of filteredIssues">
-
-
-        <!-- ISSUE TOP -->
-
-        <div class="issue-top">
-
-          <div>
-
-            <h3>
-              {{ issue.summary }}
-            </h3>
-
-            <p class="issue-id">
-              Issue ID:
-              {{ issue.id }}
-            </p>
-
-          </div>
-
-
-          <!-- STATUS DISPLAY -->
-
-          <span
-            class="status-badge"
-            [ngClass]="getStatusClass(issue.status)">
-
-            {{ issue.status }}
-
-          </span>
-
-        </div>
-
-
-        <!-- DESCRIPTION -->
-
-        <p class="description">
-
-          <strong>Description:</strong>
-
-          {{ issue.description }}
-
-        </p>
-
-
-        <!-- ================================================= -->
-        <!-- ISSUE DETAILS -->
-        <!-- ================================================= -->
-
-        <div class="issue-details">
-
-
-          <!-- PRIORITY -->
-
-          <span>
-
-            <strong>Priority:</strong>
-
-            <select
-              [ngModel]="issue.priority"
-              (change)="updatePriority(issue, $event)">
-
-              <option value="HIGH">
-                HIGH
-              </option>
-
-              <option value="MEDIUM">
-                MEDIUM
-              </option>
-
-              <option value="LOW">
-                LOW
-              </option>
-
-            </select>
-
-          </span>
-
-
-          <!-- TYPE -->
-
-          <span>
-
-            <strong>Type:</strong>
-
-            {{ issue.type }}
-
-          </span>
-
-
-          <!-- ASSIGNEE -->
-
-          <span>
-
-            <strong>Assignee:</strong>
-
-            <select
-              [ngModel]="issue.assigneeId"
-              (change)="updateAssignee(issue, $event)">
-
-              <option [ngValue]="1">
-                1
-              </option>
-
-              <option [ngValue]="2">
-                2
-              </option>
-
-              <option [ngValue]="3">
-                3
-              </option>
-
-              <option [ngValue]="4">
-                4
-              </option>
-
-            </select>
-
-          </span>
-
-
-          <!-- STORY POINT -->
-
-          <span>
-
-            <strong>Story Points:</strong>
-
-            {{ issue.storyPoint }}
-
-          </span>
-
-        </div>
-
-
-        <!-- ================================================= -->
-        <!-- UPDATE STATUS -->
-        <!-- ================================================= -->
-
-        <div class="update-status">
-
-          <label>
-            Update Status:
-          </label>
-
-          <select
-            [ngModel]="issue.status"
-            (change)="updateStatus(issue, $event)">
-
-            <option value="OPEN">
-              OPEN
-            </option>
-
-            <option value="IN_PROGRESS">
-              IN_PROGRESS
-            </option>
-
-            <option value="CLOSED">
-              CLOSED
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+
+import com.its.issue.model.Issue;
+import com.its.issue.service.IssueService;
+
+import jakarta.validation.Valid;
+
+@CrossOrigin(origins = "hjttp://localhost:4300")
+@RestController
+@RequestMapping("/api/issues")
+public class IssueController {
+
+    private final IssueService issueService;
+
+    public IssueController(IssueService issueService) {
+        this.issueService = issueService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Issue> createIssue(
+            @Valid @RequestBody Issue issue) {
+
+        Issue savedIssue = issueService.createIssue(issue);
+
+        return new ResponseEntity<>(
+                savedIssue,
+                HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Issue>> getAllIssues() {
+
+        return new ResponseEntity<>(
+                issueService.getAllIssues(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/{issueId}")
+    public ResponseEntity<Issue> getIssueById(
+            @PathVariable Long issueId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssueById(issueId),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{issueId}")
+    public ResponseEntity<Issue> updateIssue(
+            @PathVariable Long issueId,
+            @Valid @RequestBody Issue issue) {
+
+        return new ResponseEntity<>(
+                issueService.updateIssue(issueId, issue),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<Void> deleteIssue(
+            @PathVariable Long issueId) {
+
+        issueService.deleteIssue(issueId);
+
+        return new ResponseEntity<>(
+                HttpStatus.NO_CONTENT
+        );
+    }
+
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<Issue>> getIssuesByProject(
+            @PathVariable Long projectId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByProject(projectId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Issue>> getIssuesByOwner(
+            @PathVariable Long ownerId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByOwner(ownerId),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/assignee/{assigneeId}")
+    public ResponseEntity<List<Issue>> getIssuesByAssignee(
+            @PathVariable Long assigneeId) {
+
+        return new ResponseEntity<>(
+                issueService.getIssuesByAssignee(assigneeId),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{issueId}/status")
+public ResponseEntity<Issue> updateIssueStatus(
+        @PathVariable Long issueId,
+        @RequestBody Map<String, String> request) {
+
+    String status = request.get("status");
+
+    Issue updatedIssue =
+            issueService.updateIssueStatus(issueId, status);
+
+    return new ResponseEntity<>(
+            updatedIssue,
+            HttpStatus.OK
+    );
+}
+
+@PutMapping("/{issueId}/priority")
+public ResponseEntity<Issue> updateIssuePriority(
+        @PathVariable Long issueId,
+        @RequestBody Map<String, String> request) {
+
+    String priority = request.get("priority");
+
+    Issue updatedIssue =
+            issueService.updateIssuePriority(issueId, priority);
+
+    return new ResponseEntity<>(
+            updatedIssue,
+            HttpStatus.OK
+    );
+}
+
+@PutMapping("/{issueId}/assignee/{assigneeId}")
+public ResponseEntity<Issue> updateIssueAssignee(
+        @PathVariable Long issueId,
+        @PathVariable Long assigneeId) {
+
+    return new ResponseEntity<>(
+            issueService.updateIssueAssignee(issueId, assigneeId),
+            HttpStatus.OK
+    );
+}
+
+
+}
