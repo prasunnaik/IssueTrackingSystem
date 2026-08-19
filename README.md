@@ -1,11 +1,26 @@
-next: (response) => {
+ngOnInit(): void {
 
-  console.log(
-    'Signup successful:',
-    response
-  );
+  const storedUser = localStorage.getItem('user');
 
-  alert('Signup successful!');
+  if (!storedUser) {
 
-  this.router.navigate(['/login']);
-},
+    this.router.navigate(['/login']);
+
+    return;
+  }
+
+  const user = JSON.parse(storedUser);
+
+  this.ownerId = Number(user.id);
+  this.ownerName = user.name || 'Project Owner';
+
+  if (!this.ownerId) {
+
+    this.errorMessage =
+      'Logged-in user information is missing.';
+
+    return;
+  }
+
+  this.loadProjects();
+}
