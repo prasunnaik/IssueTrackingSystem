@@ -1,416 +1,832 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+<div class="app-layout">
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
+  <!-- =====================================================
+       SIDEBAR
+       ===================================================== -->
 
-@Component({
-  selector: 'app-assignee-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './assignee-dashboard.component.html',
-  styleUrl: './assignee-dashboard.component.css'
-})
-export class AssigneeDashboardComponent implements OnInit {
+  <aside class="sidebar">
 
-  // =========================================================
-  // ASSIGNEE
-  // =========================================================
+    <!-- PROFILE -->
 
-  assigneeId: number = 0;
+    <div class="sidebar-profile">
 
-  assigneeName: string = 'Assignee';
+      <div class="profile-image-wrapper">
 
-  assigneeEmail: string = '';
+        <!-- REAL IMAGE -->
 
-  profileImage: string = '';
+        <img
+          *ngIf="profileImage"
+          [src]="profileImage"
+          [alt]="assigneeName + ' profile'"
+          class="profile-image"
+          (error)="onProfileImageError()"
+        />
 
+        <!-- FALLBACK INITIAL -->
 
-  // =========================================================
-  // ISSUES
-  // =========================================================
+        <div
+          *ngIf="!profileImage"
+          class="profile-fallback">
 
-  issues: Issue[] = [];
+          {{ assigneeName.charAt(0).toUpperCase() }}
 
-  loading: boolean = false;
+        </div>
 
-  errorMessage: string = '';
+      </div>
 
-  successMessage: string = '';
 
+      <h3>
+        {{ assigneeName }}
+      </h3>
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
 
-  searchText: string = '';
+      <p class="profile-email">
+        {{ assigneeEmail }}
+      </p>
 
+    </div>
 
-  // =========================================================
-  // CONSTRUCTOR
-  // =========================================================
 
-  constructor(
-    private issueService: IssueService,
-    private router: Router
-  ) {}
+    <!-- ISSUE COUNT -->
 
+    <div class="sidebar-stats">
 
-  // =========================================================
-  // INIT
-  // =========================================================
+      <div class="sidebar-stat-number">
+        {{ getTotalIssues() }}
+      </div>
 
-  ngOnInit(): void {
+      <div class="sidebar-stat-label">
+        Issues Assigned
+      </div>
 
-    const storedUser =
-      localStorage.getItem('user');
+    </div>
 
-    if (!storedUser) {
 
-      this.router.navigate(['/login']);
+    <!-- NAVIGATION -->
 
-      return;
-    }
+    <nav class="sidebar-navigation">
 
-    try {
+      <button
+        type="button"
+        class="nav-item active"
+        (click)="goToDashboard()">
 
-      const user = JSON.parse(storedUser);
+        <span class="nav-icon">
+          ▣
+        </span>
 
-      this.assigneeId = Number(user.id);
+        <span>
+          Issue Dashboard
+        </span>
 
-      this.assigneeName =
-        user.name || 'Assignee';
+      </button>
 
-      this.assigneeEmail =
-        user.email || '';
+    </nav>
 
-      /*
-       * IMPORTANT:
-       * profileImage comes from the backend User object.
-       *
-       * Example:
-       * user.profileImage =
-       * "https://....jpg"
-       */
 
-      this.profileImage =
-        user.profileImage || '';
+    <!-- LOGOUT -->
 
-    } catch (error) {
+    <div class="sidebar-bottom">
 
-      console.error(
-        'Failed to read logged-in user:',
-        error
-      );
+      <button
+        type="button"
+        class="logout-button"
+        (click)="logout()">
 
-      this.errorMessage =
-        'Invalid logged-in user information.';
+        <span class="nav-icon">
+          ↪
+        </span>
 
-      return;
-    }
+        Logout
 
-    if (!this.assigneeId) {
+      </button>
 
-      this.errorMessage =
-        'Logged-in user information is missing.';
+    </div>
 
-      return;
-    }
+  </aside>
 
-    this.loadIssues();
-  }
 
+  <!-- =====================================================
+       MAIN CONTENT
+       ===================================================== -->
 
-  // =========================================================
-  // PROFILE IMAGE ERROR
-  // =========================================================
+  <main class="main-content">
 
-  onProfileImageError(): void {
 
-    /*
-     * If the image URL is invalid,
-     * remove it so Angular displays
-     * the fallback initial.
-     */
+    <!-- =====================================================
+         TOP HEADER
+         ===================================================== -->
 
-    this.profileImage = '';
-  }
+    <header class="top-header">
 
+      <div class="search-container">
 
-  // =========================================================
-  // LOAD ISSUES
-  // =========================================================
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          placeholder="Search issue by summary or description"
+          class="search-input"
+        />
 
-  loadIssues(): void {
+        <button
+          type="button"
+          class="search-button">
 
-    this.loading = true;
+          🔍
 
-    this.errorMessage = '';
+        </button>
 
-    this.successMessage = '';
+      </div>
 
-    this.issueService
-      .getIssuesByAssignee(this.assigneeId)
-      .subscribe({
 
-        next: (data: Issue[]) => {
+      <div class="application-name">
 
-          this.issues = data || [];
+        Issue Tracking System
 
-          this.loading = false;
-        },
+      </div>
 
-        error: (error: any) => {
+    </header>
 
-          console.error(
-            'Failed to load assigned issues:',
-            error
-          );
 
-          this.issues = [];
+    <!-- =====================================================
+         CONTENT
+         ===================================================== -->
 
-          this.loading = false;
+    <section class="content-area">
 
-          this.errorMessage =
-            'Failed to load assigned issues.';
-        }
-      });
-  }
 
+      <!-- PAGE HEADER -->
 
-  // =========================================================
-  // REFRESH
-  // =========================================================
+      <div class="page-header">
 
-  refreshDashboard(): void {
+        <div>
 
-    this.successMessage = '';
+          <h1>
+            Assignee Dashboard
+          </h1>
 
-    this.loadIssues();
-  }
+          <p>
+            View and manage your assigned issues
+          </p>
 
+        </div>
 
-  // =========================================================
-  // DASHBOARD
-  // =========================================================
 
-  goToDashboard(): void {
+        <button
+          type="button"
+          class="refresh-button"
+          (click)="refreshDashboard()">
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }
+          ↻ Refresh
 
+        </button>
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
+      </div>
 
-  get filteredIssues(): Issue[] {
 
-    const search =
-      this.searchText
-        .trim()
-        .toLowerCase();
+      <!-- ERROR -->
 
-    if (!search) {
+      <div
+        class="error-message"
+        *ngIf="errorMessage">
 
-      return this.issues;
-    }
+        {{ errorMessage }}
 
-    return this.issues.filter(issue => {
+      </div>
 
-      const summary =
-        issue.summary?.toLowerCase() || '';
 
-      const description =
-        issue.description?.toLowerCase() || '';
+      <!-- SUCCESS -->
 
-      return (
-        summary.includes(search) ||
-        description.includes(search)
-      );
-    });
-  }
+      <div
+        class="success-message"
+        *ngIf="successMessage">
 
+        {{ successMessage }}
 
-  // =========================================================
-  // TODO
-  // =========================================================
+      </div>
 
-  getTodoIssues(): Issue[] {
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'OPEN'
-    );
-  }
+      <!-- =================================================
+           SUMMARY
+           ================================================= -->
 
+      <div class="summary-cards">
 
-  // =========================================================
-  // DEVELOPMENT
-  // =========================================================
+        <div class="summary-card">
 
-  getDevelopmentIssues(): Issue[] {
+          <div class="summary-number">
+            {{ getTotalIssues() }}
+          </div>
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    );
-  }
+          <div class="summary-label">
+            Total Assigned
+          </div>
 
+        </div>
 
-  // =========================================================
-  // TESTING
-  // =========================================================
 
-  getTestingIssues(): Issue[] {
+        <div class="summary-card todo-summary">
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'TESTING'
-    );
-  }
+          <div class="summary-number">
+            {{ getTodoCount() }}
+          </div>
 
+          <div class="summary-label">
+            To Do
+          </div>
 
-  // =========================================================
-  // COMPLETED
-  // =========================================================
+        </div>
 
-  getCompletedIssues(): Issue[] {
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'CLOSED'
-    );
-  }
+        <div class="summary-card development-summary">
 
+          <div class="summary-number">
+            {{ getDevelopmentCount() }}
+          </div>
 
-  // =========================================================
-  // COUNTS
-  // =========================================================
+          <div class="summary-label">
+            Development
+          </div>
 
-  getTotalIssues(): number {
+        </div>
 
-    return this.issues.length;
-  }
 
+        <div class="summary-card testing-summary">
 
-  getTodoCount(): number {
+          <div class="summary-number">
+            {{ getTestingCount() }}
+          </div>
 
-    return this.issues.filter(
-      issue => issue.status === 'OPEN'
-    ).length;
-  }
+          <div class="summary-label">
+            Testing
+          </div>
 
+        </div>
 
-  getDevelopmentCount(): number {
 
-    return this.issues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    ).length;
-  }
+        <div class="summary-card completed-summary">
 
+          <div class="summary-number">
+            {{ getCompletedCount() }}
+          </div>
 
-  getTestingCount(): number {
+          <div class="summary-label">
+            Completed
+          </div>
 
-    return this.issues.filter(
-      issue => issue.status === 'TESTING'
-    ).length;
-  }
+        </div>
 
+      </div>
 
-  getCompletedCount(): number {
 
-    return this.issues.filter(
-      issue => issue.status === 'CLOSED'
-    ).length;
-  }
+      <!-- LOADING -->
 
+      <div
+        class="loading"
+        *ngIf="loading">
 
-  // =========================================================
-  // OPEN ISSUE
-  // =========================================================
+        Loading assigned issues...
 
-  openIssue(issue: Issue): void {
+      </div>
 
-    if (
-      issue.id === undefined ||
-      issue.id === null
-    ) {
 
-      alert('Issue ID is missing.');
+      <!-- EMPTY -->
 
-      return;
-    }
+      <div
+        class="empty-message"
+        *ngIf="
+          !loading &&
+          filteredIssues.length === 0 &&
+          !errorMessage
+        ">
 
-    this.router.navigate([
-      '/assignee-issue',
-      issue.id
-    ]);
-  }
+        <div class="empty-title">
+          No Issues Assigned
+        </div>
 
+        <p>
+          There are currently no issues assigned to you.
+        </p>
 
-  // =========================================================
-  // STATUS CLASS
-  // =========================================================
+      </div>
 
-  getStatusClass(status: string): string {
 
-    switch (status) {
+      <!-- =================================================
+           KANBAN
+           ================================================= -->
 
-      case 'OPEN':
-        return 'todo';
+      <div
+        class="kanban"
+        *ngIf="
+          !loading &&
+          filteredIssues.length > 0
+        ">
 
-      case 'IN_PROGRESS':
-        return 'development';
 
-      case 'TESTING':
-        return 'testing';
+        <!-- =================================================
+             TODO
+             ================================================= -->
 
-      case 'CLOSED':
-        return 'completed';
+        <div class="kanban-column">
 
-      default:
-        return '';
-    }
-  }
+          <div class="column-header todo-header">
 
+            <div class="column-title">
 
-  // =========================================================
-  // PRIORITY CLASS
-  // =========================================================
+              <span class="column-icon">
+                ☰
+              </span>
 
-  getPriorityClass(priority: string): string {
+              <span>
+                TO DO
+              </span>
 
-    switch (priority) {
+            </div>
 
-      case 'HIGH':
-        return 'high';
+            <span class="column-count">
+              {{ getTodoIssues().length }}
+            </span>
 
-      case 'MEDIUM':
-        return 'medium';
+          </div>
 
-      case 'LOW':
-        return 'low';
 
-      default:
-        return '';
-    }
-  }
+          <div class="column-content">
 
+            <div
+              class="issue-card"
+              *ngFor="let issue of getTodoIssues()"
+              (click)="openIssue(issue)">
 
-  // =========================================================
-  // LOGOUT
-  // =========================================================
+              <div class="issue-card-top">
 
-  logout(): void {
+                <span class="issue-id">
+                  ID: {{ issue.id }}
+                </span>
 
-    localStorage.removeItem('user');
+                <span class="issue-date">
+                  {{ issue.createdDate || '' }}
+                </span>
 
-    this.router.navigate(['/login']);
-  }
+              </div>
 
-}
+
+              <h3 class="issue-title">
+                {{ issue.summary }}
+              </h3>
+
+
+              <p class="issue-description">
+                {{ issue.description }}
+              </p>
+
+
+              <div class="issue-footer">
+
+                <!-- ASSIGNEE IMAGE -->
+
+                <div class="issue-assignee">
+
+                  <div class="mini-avatar">
+
+                    <img
+                      *ngIf="profileImage"
+                      [src]="profileImage"
+                      [alt]="assigneeName"
+                      (error)="onProfileImageError()"
+                    />
+
+                    <span *ngIf="!profileImage">
+
+                      {{ assigneeName.charAt(0).toUpperCase() }}
+
+                    </span>
+
+                  </div>
+
+
+                  <span>
+                    {{ assigneeName }}
+                  </span>
+
+                </div>
+
+
+                <span
+                  class="priority-badge"
+                  [ngClass]="getPriorityClass(issue.priority)">
+
+                  {{ issue.priority }}
+
+                </span>
+
+              </div>
+
+
+              <div class="issue-bottom-info">
+
+                <span>
+                  <strong>Type:</strong>
+                  {{ issue.type }}
+                </span>
+
+                <span>
+                  <strong>Story:</strong>
+                  {{ issue.storyPoint }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="column-empty"
+              *ngIf="getTodoIssues().length === 0">
+
+              No issues
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DEVELOPMENT
+             ================================================= -->
+
+        <div class="kanban-column">
+
+          <div class="column-header development-header">
+
+            <div class="column-title">
+
+              <span class="column-icon">
+                ⚙
+              </span>
+
+              <span>
+                DEVELOPMENT
+              </span>
+
+            </div>
+
+            <span class="column-count">
+              {{ getDevelopmentIssues().length }}
+            </span>
+
+          </div>
+
+
+          <div class="column-content">
+
+            <div
+              class="issue-card"
+              *ngFor="let issue of getDevelopmentIssues()"
+              (click)="openIssue(issue)">
+
+              <div class="issue-card-top">
+
+                <span class="issue-id">
+                  ID: {{ issue.id }}
+                </span>
+
+                <span class="issue-date">
+                  {{ issue.createdDate || '' }}
+                </span>
+
+              </div>
+
+
+              <h3 class="issue-title">
+                {{ issue.summary }}
+              </h3>
+
+
+              <p class="issue-description">
+                {{ issue.description }}
+              </p>
+
+
+              <div class="issue-footer">
+
+                <div class="issue-assignee">
+
+                  <div class="mini-avatar">
+
+                    <img
+                      *ngIf="profileImage"
+                      [src]="profileImage"
+                      [alt]="assigneeName"
+                      (error)="onProfileImageError()"
+                    />
+
+                    <span *ngIf="!profileImage">
+                      {{ assigneeName.charAt(0).toUpperCase() }}
+                    </span>
+
+                  </div>
+
+                  <span>
+                    {{ assigneeName }}
+                  </span>
+
+                </div>
+
+
+                <span
+                  class="priority-badge"
+                  [ngClass]="getPriorityClass(issue.priority)">
+
+                  {{ issue.priority }}
+
+                </span>
+
+              </div>
+
+
+              <div class="issue-bottom-info">
+
+                <span>
+                  <strong>Type:</strong>
+                  {{ issue.type }}
+                </span>
+
+                <span>
+                  <strong>Story:</strong>
+                  {{ issue.storyPoint }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="column-empty"
+              *ngIf="getDevelopmentIssues().length === 0">
+
+              No issues
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TESTING
+             ================================================= -->
+
+        <div class="kanban-column">
+
+          <div class="column-header testing-header">
+
+            <div class="column-title">
+
+              <span class="column-icon">
+                ✓
+              </span>
+
+              <span>
+                TESTING
+              </span>
+
+            </div>
+
+            <span class="column-count">
+              {{ getTestingIssues().length }}
+            </span>
+
+          </div>
+
+
+          <div class="column-content">
+
+            <div
+              class="issue-card"
+              *ngFor="let issue of getTestingIssues()"
+              (click)="openIssue(issue)">
+
+              <div class="issue-card-top">
+
+                <span class="issue-id">
+                  ID: {{ issue.id }}
+                </span>
+
+                <span class="issue-date">
+                  {{ issue.createdDate || '' }}
+                </span>
+
+              </div>
+
+
+              <h3 class="issue-title">
+                {{ issue.summary }}
+              </h3>
+
+
+              <p class="issue-description">
+                {{ issue.description }}
+              </p>
+
+
+              <div class="issue-footer">
+
+                <div class="issue-assignee">
+
+                  <div class="mini-avatar">
+
+                    <img
+                      *ngIf="profileImage"
+                      [src]="profileImage"
+                      [alt]="assigneeName"
+                      (error)="onProfileImageError()"
+                    />
+
+                    <span *ngIf="!profileImage">
+                      {{ assigneeName.charAt(0).toUpperCase() }}
+                    </span>
+
+                  </div>
+
+                  <span>
+                    {{ assigneeName }}
+                  </span>
+
+                </div>
+
+
+                <span
+                  class="priority-badge"
+                  [ngClass]="getPriorityClass(issue.priority)">
+
+                  {{ issue.priority }}
+
+                </span>
+
+              </div>
+
+
+              <div class="issue-bottom-info">
+
+                <span>
+                  <strong>Type:</strong>
+                  {{ issue.type }}
+                </span>
+
+                <span>
+                  <strong>Story:</strong>
+                  {{ issue.storyPoint }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="column-empty"
+              *ngIf="getTestingIssues().length === 0">
+
+              No issues
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             COMPLETED
+             ================================================= -->
+
+        <div class="kanban-column">
+
+          <div class="column-header completed-header">
+
+            <div class="column-title">
+
+              <span class="column-icon">
+                ✓
+              </span>
+
+              <span>
+                COMPLETED
+              </span>
+
+            </div>
+
+            <span class="column-count">
+              {{ getCompletedIssues().length }}
+            </span>
+
+          </div>
+
+
+          <div class="column-content">
+
+            <div
+              class="issue-card"
+              *ngFor="let issue of getCompletedIssues()"
+              (click)="openIssue(issue)">
+
+              <div class="issue-card-top">
+
+                <span class="issue-id">
+                  ID: {{ issue.id }}
+                </span>
+
+                <span class="issue-date">
+                  {{ issue.createdDate || '' }}
+                </span>
+
+              </div>
+
+
+              <h3 class="issue-title">
+                {{ issue.summary }}
+              </h3>
+
+
+              <p class="issue-description">
+                {{ issue.description }}
+              </p>
+
+
+              <div class="issue-footer">
+
+                <div class="issue-assignee">
+
+                  <div class="mini-avatar">
+
+                    <img
+                      *ngIf="profileImage"
+                      [src]="profileImage"
+                      [alt]="assigneeName"
+                      (error)="onProfileImageError()"
+                    />
+
+                    <span *ngIf="!profileImage">
+                      {{ assigneeName.charAt(0).toUpperCase() }}
+                    </span>
+
+                  </div>
+
+                  <span>
+                    {{ assigneeName }}
+                  </span>
+
+                </div>
+
+
+                <span
+                  class="priority-badge"
+                  [ngClass]="getPriorityClass(issue.priority)">
+
+                  {{ issue.priority }}
+
+                </span>
+
+              </div>
+
+
+              <div class="issue-bottom-info">
+
+                <span>
+                  <strong>Type:</strong>
+                  {{ issue.type }}
+                </span>
+
+                <span>
+                  <strong>Story:</strong>
+                  {{ issue.storyPoint }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="column-empty"
+              *ngIf="getCompletedIssues().length === 0">
+
+              No issues
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
