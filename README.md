@@ -1,5 +1,11 @@
-constructor(
-  private formBuilder: FormBuilder,
-  private userService: UserService,
-  private router: Router
-) {
+next: (response) => {
+
+  console.log(
+    'Signup successful:',
+    response
+  );
+
+  alert('Signup successful!');
+
+  this.router.navigate(['/login']);
+},
