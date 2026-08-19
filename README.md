@@ -1,1534 +1,1182 @@
-/* =========================================================
-   GLOBAL LAYOUT
-   ========================================================= */
+.dashboard {
+  min-height: 100vh;
+  padding: 30px;
+  background: #f5f6fa;
+}
 
-* {
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.refresh-button,
+.logout-button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.refresh-button {
+  background: #1976d2;
+  color: white;
+}
+
+.logout-button {
+  background: #d32f2f;
+  color: white;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.profile-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1976d2;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.profile-card h3 {
+  margin: 0;
+}
+
+.profile-card p {
+  margin: 5px 0 0;
+  color: #777;
+}
+
+.search-section {
+  margin-bottom: 25px;
+}
+
+.search-section input {
+  width: 100%;
+  max-width: 600px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
   box-sizing: border-box;
 }
 
-
-.app-layout {
-  display: flex;
-
-  min-height: 100vh;
-
-  width: 100%;
-
-  background: #f4f5f7;
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-  color: #333;
-}
-
-
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
-
-.sidebar {
-  width: 220px;
-
-  min-height: 100vh;
-
-  position: fixed;
-
-  left: 0;
-  top: 0;
-  bottom: 0;
-
-  background: #20252b;
-
-  color: white;
-
-  padding: 20px 14px;
-
-  z-index: 10;
-
-  display: flex;
-
-  flex-direction: column;
-}
-
-
-
-/* =========================================================
-   PROFILE
-   ========================================================= */
-
-.profile-section {
-  text-align: center;
-
-  padding-bottom: 22px;
-
-  border-bottom: 1px solid #343a40;
-}
-
-
-.profile-image {
-  width: 78px;
-
-  height: 78px;
-
-  object-fit: cover;
-
-  border-radius: 50%;
-
-  border: 3px solid #ffffff;
-
-  display: block;
-
-  margin: 0 auto 10px auto;
-
-  background: #eeeeee;
-}
-
-
-.profile-section h3 {
-  margin: 5px 0;
-
-  font-size: 16px;
-
-  color: #ffffff;
-
-  font-weight: 600;
-}
-
-
-.profile-email {
-  margin: 0;
-
-  color: #bfc3c7;
-
-  font-size: 11px;
-
-  word-break: break-word;
-}
-
-
-
-/* =========================================================
-   PROFILE STATS
-   ========================================================= */
-
-.profile-stats {
-  display: flex;
-
-  justify-content: center;
-
-  gap: 35px;
-
-  margin-top: 18px;
-}
-
-
-.profile-stat {
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-}
-
-
-.profile-stat strong {
-  font-size: 18px;
-
-  color: #ffffff;
-}
-
-
-.profile-stat span {
-  font-size: 10px;
-
-  color: #bfc3c7;
-
-  margin-top: 3px;
-}
-
-
-
-/* =========================================================
-   SIDEBAR MENU
-   ========================================================= */
-
-.sidebar-menu {
-  margin-top: 20px;
-}
-
-
-.sidebar-link {
-  width: 100%;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  padding: 11px 8px;
-
-  margin-bottom: 4px;
-
-  border: none;
-
-  border-radius: 4px;
-
-  background: transparent;
-
-  color: #f5c400;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  font-size: 12px;
-
-  transition: background 0.2s ease;
-}
-
-
-.sidebar-link:hover {
-  background: #30363d;
-}
-
-
-.sidebar-link.active {
-  background: #2c3239;
-}
-
-
-.menu-icon {
-  width: 18px;
-
-  text-align: center;
-}
-
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-.sidebar-logout {
-  margin-top: auto;
-
-  width: 100%;
-
-  padding: 8px;
-
-  border: 1px solid #f5c400;
-
-  border-radius: 5px;
-
-  background: transparent;
-
-  color: #f5c400;
-
-  cursor: pointer;
-
-  font-size: 11px;
-}
-
-
-.sidebar-logout:hover {
-  background: #f5c400;
-
-  color: #20252b;
-}
-
-
-
-/* =========================================================
-   MAIN CONTENT
-   ========================================================= */
-
-.main-content {
-  margin-left: 220px;
-
-  width: calc(100% - 220px);
-
-  min-height: 100vh;
-
-  background: #f4f5f7;
-}
-
-
-
-/* =========================================================
-   APPLICATION HEADER
-   ========================================================= */
-
-.app-header {
-  height: 48px;
-
-  width: 100%;
-
-  background: #ffc400;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  padding: 0 20px;
-}
-
-
-.search-container {
-  display: flex;
-
-  width: 380px;
-
-  height: 30px;
-}
-
-
-.search-container input {
-  flex: 1;
-
-  border: none;
-
-  outline: none;
-
-  padding: 0 10px;
-
-  font-size: 11px;
-
-  background: #ffffff;
-}
-
-
-.search-button {
-  width: 36px;
-
-  border: none;
-
-  background: #e5aa00;
-
-  cursor: pointer;
-
-  font-size: 12px;
-}
-
-
-.search-button:hover {
-  background: #d99f00;
-}
-
-
-.application-name {
-  font-size: 13px;
-
-  font-weight: bold;
-
-  color: #333;
-}
-
-
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
-
-.dashboard {
-  width: 100%;
-
-  max-width: 1400px;
-
-  margin: 0 auto;
-
-  padding: 25px;
-}
-
-
-
-/* =========================================================
-   DASHBOARD HEADING
-   ========================================================= */
-
-.dashboard-heading {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  margin-bottom: 20px;
-}
-
-
-.dashboard h1 {
-  margin: 0;
-
-  font-size: 27px;
-
-  color: #333;
-}
-
-
-.subtitle {
-  margin: 5px 0 0 0;
-
-  color: #777;
-
-  font-size: 13px;
-}
-
-
-.refresh-main-btn {
-  padding: 9px 16px;
-
-  border: none;
-
-  border-radius: 5px;
-
-  background: #1976d2;
-
-  color: white;
-
-  cursor: pointer;
-
-  font-size: 12px;
-}
-
-
-.refresh-main-btn:hover {
-  background: #125ea8;
-}
-
-
-
-/* =========================================================
-   ERROR
-   ========================================================= */
-
-.error-message {
-  padding: 12px 16px;
-
-  margin-bottom: 18px;
-
-  border-radius: 5px;
-
-  background: #ffebee;
-
-  color: #c62828;
-
-  border: 1px solid #ffcdd2;
-
-  font-size: 13px;
-}
-
-
-
-/* =========================================================
-   SUCCESS
-   ========================================================= */
-
-.success-message {
-  padding: 12px 16px;
-
-  margin-bottom: 18px;
-
-  border-radius: 5px;
-
-  background: #e8f5e9;
-
-  color: #2e7d32;
-
-  border: 1px solid #c8e6c9;
-
-  font-size: 13px;
-}
-
-
-
-/* =========================================================
-   PROJECT SELECTOR
-   ========================================================= */
-
-.project-selector {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: flex-end;
-
-  gap: 25px;
-
-  padding: 15px;
-
-  margin-bottom: 18px;
-
-  background: white;
-
-  border: 1px solid #ddd;
-
-  border-radius: 5px;
-}
-
-
-.selector-left {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 6px;
-
-  width: 45%;
-}
-
-
-.selector-left label {
-  font-size: 11px;
-
-  font-weight: bold;
-
-  color: #555;
-}
-
-
-.selector-left select {
-  width: 100%;
-
-  padding: 9px;
-
-  border: 1px solid #ddd;
-
-  border-radius: 4px;
-
-  background: white;
-
-  font-size: 12px;
-
-  outline: none;
-}
-
-
-.owner-name-display {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 5px;
-
-  font-size: 11px;
-
-  color: #777;
-}
-
-
-.owner-name-display strong {
-  color: #333;
-
-  font-size: 13px;
-}
-
-
-
-/* =========================================================
-   PROJECT CARD
-   ========================================================= */
-
-.project-card {
-  background: white;
-
-  border: 1px solid #ddd;
-
-  border-radius: 5px;
-
-  padding: 20px;
-
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
   margin-bottom: 30px;
 }
 
-
-
-/* =========================================================
-   PROJECT INFORMATION
-   ========================================================= */
-
-.project-information {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: flex-start;
-
-  padding-bottom: 18px;
-
-  border-bottom: 1px solid #e5e5e5;
+.stat-card {
+  padding: 20px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-
-.project-info-left h2 {
-  margin: 0 0 10px 0;
-
-  font-size: 20px;
-
-  color: #333;
+.stat-number {
+  font-size: 28px;
+  font-weight: bold;
 }
 
-
-.project-info-left p {
-  margin: 5px 0;
-
-  font-size: 12px;
-
+.stat-label {
+  margin-top: 5px;
   color: #666;
 }
 
-
-.project-dates {
-  display: flex;
-
-  gap: 35px;
-}
-
-
-.project-dates div {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 5px;
-}
-
-
-.project-dates span {
-  font-size: 10px;
-
-  color: #888;
-}
-
-
-.project-dates strong {
-  font-size: 12px;
-
-  color: #333;
-}
-
-
-
-/* =========================================================
-   PROJECT ACTIONS
-   ========================================================= */
-
-.project-actions {
-  display: flex;
-
-  gap: 8px;
-
-  margin: 15px 0;
-}
-
-
-.edit-button,
-.delete-button {
-  padding: 8px 14px;
-
-  border: none;
-
-  border-radius: 4px;
-
-  cursor: pointer;
-
-  font-size: 11px;
-
-  font-weight: 600;
-}
-
-
-.edit-button {
-  background: #1976d2;
-
-  color: white;
-}
-
-
-.edit-button:hover {
-  background: #125ea8;
-}
-
-
-.delete-button {
-  background: #d32f2f;
-
-  color: white;
-}
-
-
-.delete-button:hover {
-  background: #b71c1c;
-}
-
-
-
-/* =========================================================
-   STATISTICS
-   ========================================================= */
-
-.stats {
-  display: grid;
-
-  grid-template-columns:
-    repeat(5, 1fr);
-
-  gap: 10px;
-
-  margin: 18px 0;
-}
-
-
-.stat-card {
-  padding: 14px;
-
-  text-align: center;
-
-  border: 1px solid #e2e2e2;
-
-  background: #fafafa;
-
+.error-message {
+  padding: 12px;
+  margin-bottom: 20px;
+  background: #ffebee;
+  color: #c62828;
   border-radius: 5px;
 }
 
-
-.stat-number {
-  font-size: 23px;
-
-  font-weight: bold;
-
-  color: #1976d2;
-
-  margin-bottom: 3px;
-}
-
-
-.stat-label {
-  font-size: 10px;
-
-  color: #777;
-}
-
-
-
-/* =========================================================
-   FILTERS
-   ========================================================= */
-
-.filters {
-  display: flex;
-
-  gap: 7px;
-
-  flex-wrap: wrap;
-
-  padding: 12px 0;
-
-  margin-bottom: 12px;
-}
-
-
-.filters button {
-  padding: 7px 13px;
-
-  border: 1px solid #ccc;
-
-  border-radius: 4px;
-
-  background: white;
-
-  color: #555;
-
-  cursor: pointer;
-
-  font-size: 11px;
-}
-
-
-.filters button:hover {
-  background: #f1f1f1;
-}
-
-
-.filters button.active {
-  background: #ffc400;
-
-  border-color: #e0a900;
-
-  color: #333;
-
-  font-weight: bold;
-}
-
-
-
-/* =========================================================
-   ISSUES SECTION
-   ========================================================= */
-
-.issues-section {
-  margin-top: 15px;
-}
-
-
-.issues-heading {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  margin-bottom: 12px;
-}
-
-
-.issues-heading h2 {
-  margin: 0;
-
-  font-size: 18px;
-
-  color: #333;
-}
-
-
-.issues-heading span {
-  font-size: 11px;
-
-  color: #888;
-}
-
-
-
-/* =========================================================
-   KANBAN BOARD
-   ========================================================= */
-
-.kanban-board {
-  display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap: 12px;
-
-  width: 100%;
-}
-
-
-.kanban-column {
-  min-width: 0;
-
-  background: #f5f6f7;
-
-  border-radius: 4px;
-
-  padding: 8px;
-
-  min-height: 250px;
-}
-
-
-
-/* =========================================================
-   KANBAN HEADERS
-   ========================================================= */
-
-.kanban-column-header {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  padding: 9px 10px;
-
-  margin-bottom: 8px;
-
-  background: white;
-
-  border-top: 3px solid;
-
-  border-radius: 3px;
-
-  font-size: 11px;
-
-  font-weight: bold;
-}
-
-
-.open-header {
-  border-color: #e53935;
-}
-
-
-.progress-header {
-  border-color: #1976d2;
-}
-
-
-.closed-header {
-  border-color: #43a047;
-}
-
-
-.column-count {
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-width: 19px;
-
-  height: 19px;
-
-  padding: 0 5px;
-
-  border-radius: 50%;
-
-  background: #eee;
-
-  font-size: 10px;
-}
-
-
-
-/* =========================================================
-   KANBAN CARDS
-   ========================================================= */
-
-.kanban-cards {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-
-.kanban-issue {
-  background: white;
-
-  border: 1px solid #ddd;
-
-  border-radius: 4px;
-
-  padding: 11px;
-
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.06);
-
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-
-.kanban-issue:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.10);
-}
-
-
-
-/* =========================================================
-   ISSUE CARD HEADER
-   ========================================================= */
-
-.issue-card-header {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  gap: 5px;
-
-  margin-bottom: 8px;
-}
-
-
-.issue-number {
-  font-size: 9px;
-
-  color: #888;
-}
-
-
-.priority-badge {
-  padding: 3px 6px;
-
-  border-radius: 3px;
-
-  font-size: 8px;
-
-  font-weight: bold;
-}
-
-
-.priority-badge.high {
-  background: #ffebee;
-
-  color: #c62828;
-}
-
-
-.priority-badge.medium {
-  background: #fff8e1;
-
-  color: #f57f17;
-}
-
-
-.priority-badge.low {
+.success-message {
+  padding: 12px;
+  margin-bottom: 20px;
   background: #e8f5e9;
-
   color: #2e7d32;
+  border-radius: 5px;
 }
 
+.loading,
+.empty-message {
+  padding: 30px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+}
 
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
 
-/* =========================================================
-   ISSUE TITLE
-   ========================================================= */
+.column {
+  min-width: 0;
+  background: #eee;
+  border-radius: 8px;
+  padding: 12px;
+}
 
-.kanban-issue h3 {
-  margin: 0 0 7px 0;
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: white;
+}
 
-  font-size: 12px;
+.column-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
 
-  line-height: 1.4;
+.column-header span {
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: #ddd;
+  font-weight: bold;
+}
 
-  color: #333;
+.issue-card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 7px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+}
 
+.issue-title {
+  margin: 0 0 10px;
   cursor: pointer;
+  color: #1976d2;
 }
 
-
-.kanban-issue h3:hover {
-  color: #1976d2;
-
+.issue-title:hover {
   text-decoration: underline;
 }
 
-
-
-/* =========================================================
-   DESCRIPTION
-   ========================================================= */
-
 .issue-description {
-  margin: 0 0 9px 0;
-
-  font-size: 10px;
-
-  line-height: 1.4;
-
-  color: #777;
-
-  display: -webkit-box;
-
-  -webkit-line-clamp: 3;
-
-  -webkit-box-orient: vertical;
-
-  overflow: hidden;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-
-
-/* =========================================================
-   ISSUE META
-   ========================================================= */
-
-.issue-meta {
+.issue-info {
   display: flex;
-
-  justify-content: space-between;
-
-  gap: 5px;
-
-  padding-top: 8px;
-
-  border-top: 1px solid #eee;
-
-  font-size: 9px;
-
-  color: #777;
-}
-
-
-.issue-assignee {
-  display: flex;
-
-  justify-content: space-between;
-
-  margin-top: 7px;
-
-  font-size: 9px;
-
-  color: #777;
-}
-
-
-.issue-assignee strong {
-  color: #333;
-}
-
-
-
-/* =========================================================
-   CARD CONTROLS
-   ========================================================= */
-
-.card-controls {
-  display: flex;
-
-  gap: 5px;
-
-  margin-top: 9px;
-}
-
-
-.card-controls select {
-  flex: 1;
-
-  min-width: 0;
-
-  padding: 5px;
-
-  border: 1px solid #ddd;
-
-  border-radius: 3px;
-
-  background: white;
-
-  font-size: 8px;
-
-  cursor: pointer;
-
-  outline: none;
-}
-
-
-.card-controls select:focus {
-  border-color: #1976d2;
-}
-
-
-
-/* =========================================================
-   NO ISSUES
-   ========================================================= */
-
-.no-issues {
-  text-align: center;
-
-  padding: 40px 20px;
-
-  color: #777;
-
-  background: #fafafa;
-
-  border: 1px solid #e0e0e0;
-
-  border-radius: 5px;
-
-  font-size: 13px;
-}
-
-
-
-/* =========================================================
-   NO PROJECTS
-   ========================================================= */
-
-.no-projects-screen {
-  background: white;
-
-  border: 1px solid #ddd;
-
-  border-radius: 5px;
-
-  min-height: 400px;
-
-  display: flex;
-
   flex-direction: column;
-
-  justify-content: center;
-
-  align-items: center;
-
-  text-align: center;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
-
-.no-projects-icon {
-  font-size: 45px;
-
-  margin-bottom: 15px;
+.high {
+  color: #d32f2f;
+  font-weight: bold;
 }
 
-
-.no-projects-screen h2 {
-  margin: 0 0 7px 0;
-
-  color: #e53935;
-
-  font-size: 18px;
+.medium {
+  color: #ef6c00;
+  font-weight: bold;
 }
 
-
-.no-projects-screen p {
-  color: #777;
-
-  font-size: 12px;
+.low {
+  color: #2e7d32;
+  font-weight: bold;
 }
 
-
-.create-project-empty-btn {
-  margin-top: 10px;
-
-  padding: 8px 14px;
-
-  border: 1px solid #ffc400;
-
-  background: #fff;
-
-  color: #b88600;
-
-  border-radius: 4px;
-
-  cursor: pointer;
-
-  font-size: 11px;
+.status-control {
+  margin-top: 15px;
 }
 
-
-.create-project-empty-btn:hover {
-  background: #ffc400;
-
-  color: #333;
-}
-
-
-
-/* =========================================================
-   EDIT PROJECT
-   ========================================================= */
-
-.edit-project-card {
-  max-width: 700px;
-
-  margin: 20px auto;
-
-  padding: 25px;
-
-  background: white;
-
-  border-radius: 6px;
-
-  border: 1px solid #ddd;
-
-  box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-
-.edit-project-card h2 {
-  margin-top: 0;
-
-  margin-bottom: 25px;
-
-  font-size: 20px;
-}
-
-
-.form-group {
-  margin-bottom: 18px;
-}
-
-
-.form-group label {
+.status-control label {
   display: block;
-
-  margin-bottom: 6px;
-
-  font-size: 12px;
-
+  margin-bottom: 5px;
   font-weight: 600;
 }
 
-
-.form-group input {
+.status-control select {
   width: 100%;
-
-  padding: 10px;
-
+  padding: 8px;
   border: 1px solid #ccc;
-
-  border-radius: 4px;
-
-  font-size: 13px;
-
-  outline: none;
+  border-radius: 5px;
 }
 
-
-.form-group input:focus {
-  border-color: #1976d2;
+.todo-header {
+  border-top: 4px solid #1976d2;
 }
 
-
-.edit-buttons {
-  display: flex;
-
-  gap: 10px;
-
-  margin-top: 20px;
+.development-header {
+  border-top: 4px solid #ef6c00;
 }
 
-
-.save-button,
-.cancel-button {
-  padding: 9px 16px;
-
-  border: none;
-
-  border-radius: 4px;
-
-  cursor: pointer;
-
-  font-weight: 600;
+.testing-header {
+  border-top: 4px solid #7b1fa2;
 }
 
-
-.save-button {
-  background: #1976d2;
-
-  color: white;
+.completed-header {
+  border-top: 4px solid #2e7d32;
 }
 
+@media (max-width: 1000px) {
 
-.cancel-button {
-  background: #ddd;
-
-  color: #333;
-}
-
-
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 1100px) {
-
-  .kanban-board {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+  .kanban {
+    grid-template-columns: repeat(2, 1fr);
   }
-
-}
-
-
-@media (max-width: 900px) {
-
-  .sidebar {
-    width: 190px;
-  }
-
-
-  .main-content {
-    margin-left: 190px;
-
-    width: calc(100% - 190px);
-  }
-
 
   .stats {
-    grid-template-columns:
-      repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
-
-
-  .kanban-board {
-    grid-template-columns: 1fr;
-  }
-
-
-  .project-information {
-    flex-direction: column;
-
-    gap: 20px;
-  }
-
-
-  .project-dates {
-    text-align: left;
-  }
-
 }
 
-
-@media (max-width: 768px) {
-
-  .sidebar {
-    position: relative;
-
-    width: 100%;
-
-    min-height: auto;
-
-    padding: 15px;
-  }
-
-
-  .main-content {
-    margin-left: 0;
-
-    width: 100%;
-  }
-
-
-  .app-layout {
-    flex-direction: column;
-  }
-
-
-  .sidebar-menu {
-    display: flex;
-
-    flex-wrap: wrap;
-
-    gap: 5px;
-  }
-
-
-  .sidebar-link {
-    width: auto;
-
-    flex: 1;
-  }
-
-
-  .sidebar-logout {
-    position: static;
-
-    margin-top: 15px;
-  }
-
-
-  .app-header {
-    flex-direction: column;
-
-    height: auto;
-
-    gap: 10px;
-
-    padding: 10px;
-  }
-
-
-  .search-container {
-    width: 100%;
-  }
-
-
-  .application-name {
-    align-self: flex-end;
-  }
-
+@media (max-width: 600px) {
 
   .dashboard {
     padding: 15px;
   }
 
-
-  .dashboard-heading {
+  .dashboard-header {
     flex-direction: column;
-
-    align-items: stretch;
-
-    gap: 10px;
+    align-items: flex-start;
+    gap: 15px;
   }
 
-
-  .refresh-main-btn {
-    align-self: flex-start;
-  }
-
-
-  .project-selector {
-    flex-direction: column;
-
-    align-items: stretch;
-  }
-
-
-  .selector-left {
-    width: 100%;
-  }
-
-
-  .stats {
-    grid-template-columns: 1fr 1fr;
-  }
-
-}
-
-
-@media (max-width: 500px) {
-
-  .stats {
+  .kanban {
     grid-template-columns: 1fr;
   }
 
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
-  .project-actions {
-    flex-direction: column;
+<div class="dashboard">
+
+  <!-- ===================================================== -->
+  <!-- HEADER -->
+  <!-- ===================================================== -->
+
+  <div class="dashboard-header">
+
+    <div>
+
+      <h1>
+        Assignee Dashboard
+      </h1>
+
+      <p class="subtitle">
+        View and manage your assigned issues
+      </p>
+
+    </div>
+
+
+    <div class="header-actions">
+
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="refreshDashboard()">
+
+        Refresh
+
+      </button>
+
+
+      <button
+        type="button"
+        class="logout-button"
+        (click)="logout()">
+
+        Logout
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- PROFILE -->
+  <!-- ===================================================== -->
+
+  <div class="profile-card">
+
+    <div class="profile-avatar">
+
+      {{ assigneeName.charAt(0) }}
+
+    </div>
+
+    <div>
+
+      <h3>
+        {{ assigneeName }}
+      </h3>
+
+      <p>
+        Assignee ID: {{ assigneeId }}
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- ERROR -->
+  <!-- ===================================================== -->
+
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
+
+    {{ errorMessage }}
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- SUCCESS -->
+  <!-- ===================================================== -->
+
+  <div
+    class="success-message"
+    *ngIf="successMessage">
+
+    {{ successMessage }}
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- SEARCH -->
+  <!-- ===================================================== -->
+
+  <div class="search-section">
+
+    <input
+      type="text"
+      [(ngModel)]="searchText"
+      placeholder="Search by summary or description..."
+    />
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- STATISTICS -->
+  <!-- ===================================================== -->
+
+  <div class="stats">
+
+    <div class="stat-card">
+
+      <div class="stat-number">
+        {{ getTotalIssues() }}
+      </div>
+
+      <div class="stat-label">
+        Total Assigned
+      </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <div class="stat-number">
+        {{ getTodoCount() }}
+      </div>
+
+      <div class="stat-label">
+        TO-DO
+      </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <div class="stat-number">
+        {{ getDevelopmentCount() }}
+      </div>
+
+      <div class="stat-label">
+        Development
+      </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <div class="stat-number">
+        {{ getTestingCount() }}
+      </div>
+
+      <div class="stat-label">
+        Testing
+      </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <div class="stat-number">
+        {{ getCompletedCount() }}
+      </div>
+
+      <div class="stat-label">
+        Completed
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- LOADING -->
+  <!-- ===================================================== -->
+
+  <div
+    class="loading"
+    *ngIf="loading">
+
+    Loading assigned issues...
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- NO ISSUES -->
+  <!-- ===================================================== -->
+
+  <div
+    class="empty-message"
+    *ngIf="
+      !loading &&
+      filteredIssues.length === 0 &&
+      !errorMessage
+    ">
+
+    No assigned issues found.
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- KANBAN BOARD -->
+  <!-- ===================================================== -->
+
+  <div
+    class="kanban"
+    *ngIf="
+      !loading &&
+      filteredIssues.length > 0
+    ">
+
+
+    <!-- ================================================= -->
+    <!-- TO-DO -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header todo-header">
+
+        <h2>
+          TO-DO
+        </h2>
+
+        <span>
+          {{ getTodoIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getTodoIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- DEVELOPMENT -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header development-header">
+
+        <h2>
+          Development
+        </h2>
+
+        <span>
+          {{ getDevelopmentIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getDevelopmentIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TESTING -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header testing-header">
+
+        <h2>
+          Testing
+        </h2>
+
+        <span>
+          {{ getTestingIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getTestingIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- COMPLETED -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header completed-header">
+
+        <h2>
+          Completed
+        </h2>
+
+        <span>
+          {{ getCompletedIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getCompletedIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+
+import { IssueService } from '../../services/issue.service';
+import { Issue } from '../../models/issue';
+
+@Component({
+  selector: 'app-assignee-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './assignee-dashboard.component.html',
+  styleUrl: './assignee-dashboard.component.css'
+})
+export class AssigneeDashboardComponent implements OnInit {
+
+  // =========================================================
+  // ASSIGNEE
+  // =========================================================
+
+  // Temporary hardcoded ID.
+  // Later this will come from login/authentication.
+  assigneeId: number = 0;
+
+  assigneeName: string = 'Assignee';
+
+
+  // =========================================================
+  // ISSUES
+  // =========================================================
+
+  issues: Issue[] = [];
+
+  loading: boolean = false;
+
+  errorMessage: string = '';
+
+  successMessage: string = '';
+
+
+  // =========================================================
+  // SEARCH
+  // =========================================================
+
+  searchText: string = '';
+
+
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
+
+  constructor(
+    private issueService: IssueService,
+    private router: Router
+  ) {}
+
+
+  // =========================================================
+  // INIT
+  // =========================================================
+
+  ngOnInit(): void {
+
+  const storedUser = localStorage.getItem('user');
+
+  if (!storedUser) {
+
+    this.router.navigate(['/login']);
+
+    return;
+  }
+
+  const user = JSON.parse(storedUser);
+
+  this.assigneeId = Number(user.id);
+  this.assigneeName = user.name || 'Assignee';
+
+  if (!this.assigneeId) {
+
+    this.errorMessage =
+      'Logged-in user information is missing.';
+
+    return;
+  }
+
+  this.loadIssues();
+}
+
+
+  // =========================================================
+  // LOAD ASSIGNED ISSUES
+  // =========================================================
+
+  loadIssues(): void {
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.issueService
+      .getIssuesByAssignee(this.assigneeId)
+      .subscribe({
+
+        next: (data: Issue[]) => {
+
+          this.issues = data || [];
+
+          this.loading = false;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to load assigned issues:',
+            error
+          );
+
+          this.issues = [];
+
+          this.loading = false;
+
+          this.errorMessage =
+            'Failed to load assigned issues.';
+        }
+      });
   }
 
 
-  .edit-button,
-  .delete-button {
-    width: 100%;
+  // =========================================================
+  // REFRESH
+  // =========================================================
+
+  refreshDashboard(): void {
+
+    this.successMessage = '';
+
+    this.loadIssues();
   }
 
 
-  .project-dates {
-    flex-direction: column;
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-    gap: 10px;
+  get filteredIssues(): Issue[] {
+
+    const search =
+      this.searchText
+        .trim()
+        .toLowerCase();
+
+    if (!search) {
+      return this.issues;
+    }
+
+    return this.issues.filter(issue =>
+
+      issue.summary
+        ?.toLowerCase()
+        .includes(search)
+
+      ||
+
+      issue.description
+        ?.toLowerCase()
+        .includes(search)
+    );
   }
 
 
-  .filters {
-    flex-direction: column;
+  // =========================================================
+  // TODO ISSUES
+  // =========================================================
+
+  getTodoIssues(): Issue[] {
+
+    return this.filteredIssues.filter(
+      issue => issue.status === 'OPEN'
+    );
   }
 
 
-  .filters button {
-    width: 100%;
+  // =========================================================
+  // DEVELOPMENT ISSUES
+  // =========================================================
+
+  getDevelopmentIssues(): Issue[] {
+
+    return this.filteredIssues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    );
   }
 
 
-  .sidebar-menu {
-    flex-direction: column;
+  // =========================================================
+  // TESTING ISSUES
+  // =========================================================
+
+  getTestingIssues(): Issue[] {
+
+    return this.filteredIssues.filter(
+      issue => issue.status === 'TESTING'
+    );
   }
 
 
-  .sidebar-link {
-    width: 100%;
+  // =========================================================
+  // COMPLETED ISSUES
+  // =========================================================
+
+  getCompletedIssues(): Issue[] {
+
+    return this.filteredIssues.filter(
+      issue => issue.status === 'CLOSED'
+    );
   }
 
+
+  // =========================================================
+  // COUNTS
+  // =========================================================
+
+  getTotalIssues(): number {
+
+    return this.issues.length;
+  }
+
+
+  getTodoCount(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'OPEN'
+    ).length;
+  }
+
+
+  getDevelopmentCount(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'IN_PROGRESS'
+    ).length;
+  }
+
+
+  getTestingCount(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'TESTING'
+    ).length;
+  }
+
+
+  getCompletedCount(): number {
+
+    return this.issues.filter(
+      issue => issue.status === 'CLOSED'
+    ).length;
+  }
+
+
+  // =========================================================
+  // OPEN ISSUE DETAILS
+  // =========================================================
+
+  openIssue(issue: Issue): void {
+
+    if (issue.id === undefined) {
+
+      alert('Issue ID is missing.');
+
+      return;
+    }
+
+    this.router.navigate([
+      '/assignee-issue',
+      issue.id
+    ]);
+  }
+
+
+  // =========================================================
+  // STATUS CLASS
+  // =========================================================
+
+  getStatusClass(status: string): string {
+
+    if (status === 'OPEN') {
+      return 'todo';
+    }
+
+    if (status === 'IN_PROGRESS') {
+      return 'development';
+    }
+
+    if (status === 'TESTING') {
+      return 'testing';
+    }
+
+    if (status === 'CLOSED') {
+      return 'completed';
+    }
+
+    return '';
+  }
+
+
+  // =========================================================
+  // PRIORITY CLASS
+  // =========================================================
+
+  getPriorityClass(priority: string): string {
+
+    if (priority === 'HIGH') {
+      return 'high';
+    }
+
+    if (priority === 'MEDIUM') {
+      return 'medium';
+    }
+
+    if (priority === 'LOW') {
+      return 'low';
+    }
+
+    return '';
+  }
+
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
+
+  logout(): void {
+
+    this.router.navigate([
+      '/login'
+    ]);
+  }
 }
