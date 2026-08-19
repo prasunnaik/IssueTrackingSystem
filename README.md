@@ -7,11 +7,7 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink
-  ],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -19,8 +15,7 @@ export class LoginComponent {
 
   user = {
     email: '',
-    password: '',
-    role: ''
+    password: ''
   };
 
   errorMessage = '';
@@ -40,38 +35,28 @@ export class LoginComponent {
 
         console.log('Login successful:', response);
 
-        // Store complete logged-in user
         localStorage.setItem(
           'user',
           JSON.stringify(response)
         );
 
-        // Navigate according to backend role
         if (response.role === 'Project_Owner') {
 
-          this.router.navigate([
-            '/owner-dashboard'
-          ]);
+          this.router.navigate(['/owner-dashboard']);
 
         } else if (response.role === 'Assignee') {
 
-          this.router.navigate([
-            '/assignee-dashboard'
-          ]);
+          this.router.navigate(['/assignee-dashboard']);
 
         } else {
 
-          this.errorMessage =
-            'Invalid user role.';
+          this.errorMessage = 'Invalid user role.';
         }
       },
 
       error: (error) => {
 
-        console.error(
-          'Login failed:',
-          error
-        );
+        console.error('Login failed:', error);
 
         this.errorMessage =
           'Invalid email or password.';
@@ -79,6 +64,9 @@ export class LoginComponent {
     });
   }
 }
+
+
+
 <div class="login-page">
 
   <div class="login-box">
@@ -144,42 +132,6 @@ export class LoginComponent {
       </div>
 
 
-      <!-- Role -->
-      <div class="form-group">
-
-        <label>Role</label>
-
-        <select
-          name="role"
-          [(ngModel)]="user.role"
-          required
-          #roleField="ngModel">
-
-          <option value="">
-            Select your role
-          </option>
-
-          <option value="Project_Owner">
-            Project Owner
-          </option>
-
-          <option value="Assignee">
-            Assignee
-          </option>
-
-        </select>
-
-        <div
-          class="error"
-          *ngIf="roleField.invalid && roleField.touched">
-
-          Role is required
-
-        </div>
-
-      </div>
-
-
       <!-- Backend error -->
       <div
         class="server-error"
@@ -216,3 +168,35 @@ export class LoginComponent {
   </div>
 
 </div>
+
+
+
+@PostMapping("/login")
+public ResponseEntity<User> login(
+        @RequestBody User user) {
+
+    return new ResponseEntity<>(
+            userService.login(
+                    user.getEmail(),
+                    user.getPassword()
+            ),
+            HttpStatus.OK
+    );
+}
+
+
+@Override
+public User login(String email, String password) {
+
+    User user = userRepository.findByEmail(email);
+
+    if (user == null ||
+        !user.getPassword().equals(password)) {
+
+        throw new InvalidCredentialsException(
+            "Invalid email or password"
+        );
+    }
+
+    return user;
+}
