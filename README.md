@@ -1,631 +1,910 @@
-<div class="dashboard">
+/* =========================================================
+   MAIN DASHBOARD
+   ========================================================= */
 
-  <!-- ==================== HEADER ==================== -->
+.dashboard {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 30px;
 
-  <div class="dashboard-header">
+  font-family: Arial, Helvetica, sans-serif;
 
-    <div class="header-title">
-      <h1>Project Owner Dashboard</h1>
+  color: #333;
+  background-color: #f7f9fc;
 
-      <p class="subtitle">
-        Manage your projects and track issues
-      </p>
-    </div>
+  min-height: 100vh;
+}
 
-    <div class="header-buttons">
 
-      <button
-        class="create-project-btn"
-        type="button"
-        (click)="createProject()">
+/* =========================================================
+   HEADER
+   ========================================================= */
 
-        + Create Project
+.dashboard-header {
+  display: flex;
 
-      </button>
+  justify-content: space-between;
+  align-items: center;
 
-      <button
-        class="create-issue-btn"
-        type="button"
-        (click)="createIssue()">
+  gap: 20px;
 
-        + Create Issue
+  margin-bottom: 30px;
+}
 
-      </button>
 
-      <button
-        class="refresh-btn"
-        type="button"
-        (click)="refreshDashboard()">
+.header-title {
+  flex: 1;
+}
 
-        Refresh
 
-      </button>
+.dashboard h1 {
+  margin: 0 0 8px 0;
 
-    </div>
+  font-size: 32px;
 
-  </div>
+  color: #222;
+}
 
 
-  <!-- ==================== ERROR ==================== -->
+.subtitle {
+  margin: 0;
 
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
+  color: #777;
 
-    {{ errorMessage }}
+  font-size: 15px;
+}
 
-  </div>
 
+/* =========================================================
+   HEADER BUTTONS
+   ========================================================= */
 
-  <!-- ==================== SUCCESS ==================== -->
+.header-buttons {
+  display: flex;
 
-  <div
-    class="success-message"
-    *ngIf="successMessage">
+  align-items: center;
 
-    {{ successMessage }}
+  gap: 10px;
 
-  </div>
+  flex-wrap: wrap;
+}
 
 
-  <!-- ==================== NO PROJECTS ==================== -->
+.create-project-btn,
+.create-issue-btn,
+.refresh-btn {
+  padding: 10px 16px;
 
-  <div
-    class="empty-message"
-    *ngIf="
-      projects.length === 0 &&
-      !errorMessage
-    ">
+  border: none;
 
-    No projects found.
+  border-radius: 6px;
 
-  </div>
+  color: white;
 
+  font-size: 14px;
 
-  <!-- ==================== PROJECT SELECTOR ==================== -->
+  font-weight: 600;
 
-  <div
-    class="project-selector"
-    *ngIf="
-      projects.length > 0 &&
-      !editMode
-    ">
+  cursor: pointer;
+}
 
-    <label for="projectSelect">
-      Select Project:
-    </label>
 
-    <select
-      id="projectSelect"
-      [ngModel]="selectedProject"
-      (ngModelChange)="selectProject($event)">
+/* Create Project */
 
-      <option
-        *ngFor="let project of projects"
-        [ngValue]="project">
+.create-project-btn {
+  background-color: #1976d2;
+}
 
-        {{ project.projectName }}
 
-      </option>
+.create-project-btn:hover {
+  background-color: #125ea8;
+}
 
-    </select>
 
-  </div>
+/* Create Issue */
 
+.create-issue-btn {
+  background-color: #2e7d32;
+}
 
-  <!-- ==================== EDIT PROJECT ==================== -->
 
-  <div
-    class="edit-project-card"
-    *ngIf="editMode">
+.create-issue-btn:hover {
+  background-color: #1b5e20;
+}
 
-    <h2>
-      Edit Project
-    </h2>
 
+/* Refresh */
 
-    <div class="form-group">
+.refresh-btn {
+  background-color: #616161;
+}
 
-      <label>
-        Project Name
-      </label>
 
-      <input
-        type="text"
-        [(ngModel)]="editProjectData.projectName"
-        placeholder="Project name"
-      />
+.refresh-btn:hover {
+  background-color: #424242;
+}
 
-    </div>
 
+/* =========================================================
+   ERROR
+   ========================================================= */
 
-    <div class="form-group">
+.error-message {
+  padding: 12px 16px;
 
-      <label>
-        Product Owner ID
-      </label>
+  margin-bottom: 20px;
 
-      <input
-        type="number"
-        [(ngModel)]="editProjectData.productOwnerId"
-        min="1"
-      />
+  border-radius: 6px;
 
-    </div>
+  background-color: #ffebee;
 
+  color: #c62828;
 
-    <div class="form-group">
+  border: 1px solid #ffcdd2;
+}
 
-      <label>
-        Start Date
-      </label>
 
-      <input
-        type="date"
-        [(ngModel)]="editProjectData.startDate"
-      />
+/* =========================================================
+   SUCCESS
+   ========================================================= */
 
-    </div>
+.success-message {
+  padding: 12px 16px;
 
+  margin-bottom: 20px;
 
-    <div class="form-group">
+  border-radius: 6px;
 
-      <label>
-        End Date
-      </label>
+  background-color: #e8f5e9;
 
-      <input
-        type="date"
-        [(ngModel)]="editProjectData.endDate"
-      />
+  color: #2e7d32;
 
-    </div>
+  border: 1px solid #c8e6c9;
+}
 
 
-    <div class="edit-buttons">
+/* =========================================================
+   PROJECT SELECTOR
+   ========================================================= */
 
-      <button
-        class="save-button"
-        type="button"
-        (click)="saveProject()">
+.project-selector {
+  display: flex;
 
-        Save Changes
+  align-items: center;
 
-      </button>
+  gap: 12px;
 
+  margin-bottom: 20px;
 
-      <button
-        class="cancel-button"
-        type="button"
-        (click)="cancelEditProject()">
+  padding: 15px;
 
-        Cancel
+  background-color: white;
 
-      </button>
+  border: 1px solid #e0e0e0;
 
-    </div>
+  border-radius: 8px;
+}
 
-  </div>
 
+.project-selector label {
+  font-weight: 600;
+}
 
-  <!-- ==================== SELECTED PROJECT ==================== -->
 
-  <div
-    class="project-card"
-    *ngIf="
-      selectedProject &&
-      !editMode
-    ">
+.project-selector select {
+  min-width: 250px;
 
+  padding: 9px 12px;
 
-    <!-- PROJECT HEADER -->
+  border: 1px solid #ccc;
 
-    <div class="project-header">
+  border-radius: 6px;
 
-      <div>
+  background-color: white;
 
-        <h2>
-          {{ selectedProject.projectName }}
-        </h2>
+  cursor: pointer;
+}
 
-        <p>
-          <strong>Project ID:</strong>
-          {{ selectedProject.id }}
-        </p>
 
-        <p>
-          <strong>Owner ID:</strong>
-          {{ selectedProject.productOwnerId }}
-        </p>
+/* =========================================================
+   EMPTY MESSAGE
+   ========================================================= */
 
-      </div>
+.empty-message,
+.no-projects,
+.no-issues {
+  text-align: center;
 
+  padding: 30px;
 
-      <div class="project-dates">
+  color: #777;
 
-        <p>
-          <strong>Start:</strong>
-          {{ selectedProject.startDate }}
-        </p>
+  background-color: white;
 
-        <p>
-          <strong>End:</strong>
-          {{ selectedProject.endDate }}
-        </p>
+  border-radius: 10px;
 
-      </div>
+  border: 1px solid #e0e0e0;
+}
 
-    </div>
 
+/* =========================================================
+   EDIT PROJECT
+   ========================================================= */
 
-    <!-- ==================== PROJECT ACTIONS ==================== -->
+.edit-project-card {
+  max-width: 700px;
 
-    <div class="project-actions">
+  margin: 20px auto;
 
-      <button
-        class="edit-button"
-        type="button"
-        (click)="startEditProject()">
+  padding: 25px;
 
-        Edit Project
+  background-color: white;
 
-      </button>
+  border-radius: 10px;
 
+  border: 1px solid #e0e0e0;
 
-      <button
-        class="delete-button"
-        type="button"
-        (click)="deleteProject()">
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
 
-        Delete Project
 
-      </button>
+.edit-project-card h2 {
+  margin-top: 0;
 
-    </div>
+  margin-bottom: 25px;
+}
 
 
-    <!-- ==================== STATISTICS ==================== -->
+.form-group {
+  margin-bottom: 18px;
+}
 
-    <div class="stats">
 
-      <div class="stat-card">
+.form-group label {
+  display: block;
 
-        <div class="stat-number">
-          {{ getTotalIssues() }}
-        </div>
+  margin-bottom: 6px;
 
-        <div class="stat-label">
-          Total Issues
-        </div>
+  font-weight: 600;
+}
 
-      </div>
 
+.form-group input {
+  width: 100%;
 
-      <div class="stat-card">
+  padding: 10px;
 
-        <div class="stat-number">
-          {{ getOpenIssues() }}
-        </div>
+  box-sizing: border-box;
 
-        <div class="stat-label">
-          Open Issues
-        </div>
+  border: 1px solid #ccc;
 
-      </div>
+  border-radius: 5px;
 
+  font-size: 14px;
+}
 
-      <div class="stat-card">
 
-        <div class="stat-number">
-          {{ getHighPriorityIssues() }}
-        </div>
+.form-group input:focus {
+  outline: none;
 
-        <div class="stat-label">
-          High Priority
-        </div>
+  border-color: #1976d2;
+}
 
-      </div>
 
+/* Edit Buttons */
 
-      <div class="stat-card">
+.edit-buttons {
+  display: flex;
 
-        <div class="stat-number">
-          {{ getInProgressIssues() }}
-        </div>
+  gap: 10px;
 
-        <div class="stat-label">
-          In Progress
-        </div>
+  margin-top: 20px;
+}
 
-      </div>
 
+.save-button,
+.cancel-button {
+  padding: 9px 16px;
 
-      <div class="stat-card">
+  border: none;
 
-        <div class="stat-number">
-          {{ getClosedIssues() }}
-        </div>
+  border-radius: 5px;
 
-        <div class="stat-label">
-          Closed
-        </div>
+  cursor: pointer;
 
-      </div>
+  font-weight: 600;
+}
 
-    </div>
 
+.save-button {
+  background-color: #1976d2;
 
-    <!-- ==================== FILTERS ==================== -->
+  color: white;
+}
 
-    <div class="filters">
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'ALL'"
-        (click)="filterIssues('ALL')">
+.save-button:hover {
+  background-color: #125ea8;
+}
 
-        All
 
-      </button>
+.cancel-button {
+  background-color: #ddd;
 
+  color: #333;
+}
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'OPEN'"
-        (click)="filterIssues('OPEN')">
 
-        Open
+.cancel-button:hover {
+  background-color: #ccc;
+}
 
-      </button>
 
+/* =========================================================
+   PROJECT CARD
+   ========================================================= */
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'IN_PROGRESS'"
-        (click)="filterIssues('IN_PROGRESS')">
+.project-card {
+  background-color: white;
 
-        In Progress
+  border: 1px solid #e0e0e0;
 
-      </button>
+  border-radius: 12px;
 
+  padding: 25px;
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'HIGH'"
-        (click)="filterIssues('HIGH')">
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-        High Priority
+  margin-bottom: 30px;
+}
 
-      </button>
 
+/* =========================================================
+   PROJECT HEADER
+   ========================================================= */
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'MEDIUM'"
-        (click)="filterIssues('MEDIUM')">
+.project-header {
+  display: flex;
 
-        Medium
+  justify-content: space-between;
 
-      </button>
+  align-items: flex-start;
 
+  padding-bottom: 20px;
 
-      <button
-        type="button"
-        [class.active]="selectedFilter === 'CLOSED'"
-        (click)="filterIssues('CLOSED')">
+  border-bottom: 1px solid #e5e5e5;
+}
 
-        Closed
 
-      </button>
+.project-header h2 {
+  margin: 0 0 8px 0;
 
-    </div>
+  font-size: 24px;
 
+  color: #333;
+}
 
-    <!-- ==================== ISSUES ==================== -->
 
-    <div class="issues-section">
+.project-header p {
+  margin: 5px 0;
 
-      <h2>
-        Issues
-      </h2>
+  color: #666;
+}
 
 
-      <div
-        class="no-issues"
-        *ngIf="filteredIssues.length === 0">
+.project-dates {
+  text-align: right;
+}
 
-        No issues found for this project.
 
-      </div>
+.project-dates p {
+  margin: 5px 0;
+}
 
 
-      <!-- ==================== ISSUE CARD ==================== -->
+/* =========================================================
+   PROJECT ACTIONS
+   ========================================================= */
 
-      <div
-        class="issue-card"
-        *ngFor="let issue of filteredIssues">
+.project-actions {
+  display: flex;
 
+  gap: 10px;
 
-        <!-- ISSUE HEADER -->
+  margin: 20px 0;
+}
 
-        <div class="issue-top">
 
-          <div>
+.edit-button,
+.delete-button {
+  padding: 9px 16px;
 
-            <h3
-              class="issue-title"
-              (click)="openIssueDetails(issue)">
+  border: none;
 
-              {{ issue.summary }}
+  border-radius: 5px;
 
-            </h3>
+  cursor: pointer;
 
-            <p class="issue-id">
+  font-weight: 600;
+}
 
-              Issue ID:
-              {{ issue.id }}
 
-            </p>
+.edit-button {
+  background-color: #1976d2;
 
-          </div>
+  color: white;
+}
 
 
-          <span
-            class="status-badge"
-            [ngClass]="getStatusClass(issue.status)">
+.edit-button:hover {
+  background-color: #125ea8;
+}
 
-            {{ issue.status }}
 
-          </span>
+.delete-button {
+  background-color: #d32f2f;
 
-        </div>
+  color: white;
+}
 
 
-        <!-- DESCRIPTION -->
+.delete-button:hover {
+  background-color: #b71c1c;
+}
 
-        <p class="description">
 
-          <strong>Description:</strong>
+/* =========================================================
+   STATISTICS
+   ========================================================= */
 
-          {{ issue.description }}
+.stats {
+  display: grid;
 
-        </p>
+  grid-template-columns:
+    repeat(5, 1fr);
 
+  gap: 15px;
 
-        <!-- ISSUE DETAILS -->
+  margin: 25px 0;
+}
 
-        <div class="issue-details">
 
+.stat-card {
+  border: 1px solid #e0e0e0;
 
-          <!-- PRIORITY -->
+  border-radius: 8px;
 
-          <span>
+  padding: 18px;
 
-            <strong>Priority:</strong>
+  text-align: center;
 
-            <select
-              [ngModel]="issue.priority"
-              (change)="
-                updatePriority(
-                  issue,
-                  $event
-                )
-              ">
+  background-color: #fafafa;
+}
 
-              <option value="HIGH">
-                HIGH
-              </option>
 
-              <option value="MEDIUM">
-                MEDIUM
-              </option>
+.stat-number {
+  font-size: 28px;
 
-              <option value="LOW">
-                LOW
-              </option>
+  font-weight: bold;
 
-            </select>
+  color: #1976d2;
 
-          </span>
+  margin-bottom: 5px;
+}
 
 
-          <!-- TYPE -->
+.stat-label {
+  color: #777;
 
-          <span>
+  font-size: 13px;
+}
 
-            <strong>Type:</strong>
 
-            {{ issue.type }}
+/* =========================================================
+   FILTERS
+   ========================================================= */
 
-          </span>
+.filters {
+  display: flex;
 
+  flex-wrap: wrap;
 
-          <!-- ASSIGNEE -->
+  gap: 8px;
 
-          <span>
+  margin: 25px 0;
+}
 
-            <strong>Assignee:</strong>
 
-            <select
-              [ngModel]="issue.assigneeId"
-              (change)="
-                updateAssignee(
-                  issue,
-                  $event
-                )
-              ">
+.filters button {
+  padding: 8px 14px;
 
-              <option [ngValue]="1">
-                1
-              </option>
+  border: 1px solid #ccc;
 
-              <option [ngValue]="2">
-                2
-              </option>
+  border-radius: 6px;
 
-              <option [ngValue]="3">
-                3
-              </option>
+  background-color: white;
 
-              <option [ngValue]="4">
-                4
-              </option>
+  color: #555;
 
-            </select>
+  cursor: pointer;
 
-          </span>
+  font-size: 13px;
+}
 
 
-          <!-- STORY POINTS -->
+.filters button:hover {
+  background-color: #f0f0f0;
+}
 
-          <span>
 
-            <strong>Story Points:</strong>
+.filters button.active {
+  background-color: #1976d2;
 
-            {{ issue.storyPoint }}
+  color: white;
 
-          </span>
+  border-color: #1976d2;
+}
 
-        </div>
 
+/* =========================================================
+   ISSUES SECTION
+   ========================================================= */
 
-        <!-- STATUS -->
+.issues-section {
+  margin-top: 25px;
+}
 
-        <div class="status-update">
 
-          <label>
-            Update Status:
-          </label>
+.issues-section h2 {
+  font-size: 20px;
 
-          <select
-            [ngModel]="issue.status"
-            (change)="
-              updateStatus(
-                issue,
-                $event
-              )
-            ">
+  margin-bottom: 15px;
 
-            <option value="OPEN">
-              OPEN
-            </option>
+  color: #333;
+}
 
-            <option value="IN_PROGRESS">
-              IN_PROGRESS
-            </option>
 
-            <option value="CLOSED">
-              CLOSED
-            </option>
+/* =========================================================
+   ISSUE CARD
+   ========================================================= */
 
-          </select>
+.issue-card {
+  border: 1px solid #e1e1e1;
 
-        </div>
+  border-radius: 8px;
 
-      </div>
+  padding: 20px;
 
-    </div>
+  margin-bottom: 15px;
 
-  </div>
+  background-color: #fff;
+}
 
-</div>
+
+.issue-card:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =========================================================
+   ISSUE TOP
+   ========================================================= */
+
+.issue-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 15px;
+
+  margin-bottom: 15px;
+}
+
+
+.issue-title {
+  margin: 0;
+
+  font-size: 18px;
+
+  color: #1976d2;
+
+  cursor: pointer;
+}
+
+
+.issue-title:hover {
+  text-decoration: underline;
+}
+
+
+.issue-id {
+  margin: 5px 0 0 0;
+
+  font-size: 12px;
+
+  color: #888;
+}
+
+
+/* =========================================================
+   STATUS BADGE
+   ========================================================= */
+
+.status-badge {
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  white-space: nowrap;
+}
+
+
+/* Open */
+
+.status-badge.OPEN {
+  background-color: #e3f2fd;
+
+  color: #1565c0;
+}
+
+
+/* In Progress */
+
+.status-badge.IN_PROGRESS {
+  background-color: #fff3e0;
+
+  color: #ef6c00;
+}
+
+
+/* Closed */
+
+.status-badge.CLOSED {
+  background-color: #e8f5e9;
+
+  color: #2e7d32;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.description {
+  margin: 8px 0;
+
+  font-size: 14px;
+
+  color: #555;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   ISSUE DETAILS
+   ========================================================= */
+
+.issue-details {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 20px;
+
+  margin-top: 15px;
+
+  padding-top: 15px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+
+.issue-details span {
+  font-size: 13px;
+
+  color: #555;
+}
+
+
+.issue-details strong {
+  margin-right: 5px;
+}
+
+
+.issue-details select {
+  padding: 5px 8px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 5px;
+
+  background-color: white;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   STATUS UPDATE
+   ========================================================= */
+
+.status-update {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 20px;
+
+  padding-top: 15px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+
+.status-update label {
+  font-weight: 600;
+
+  font-size: 14px;
+}
+
+
+.status-update select {
+  padding: 8px 12px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 6px;
+
+  background-color: white;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+
+.status-update select:focus,
+.issue-details select:focus {
+  outline: none;
+
+  border-color: #1976d2;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .stats {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+}
+
+
+@media (max-width: 768px) {
+
+  .dashboard {
+    margin: 10px;
+
+    padding: 15px;
+  }
+
+
+  .dashboard-header {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+
+  .dashboard h1 {
+    text-align: center;
+
+    font-size: 26px;
+  }
+
+
+  .subtitle {
+    text-align: center;
+  }
+
+
+  .header-buttons {
+    justify-content: center;
+  }
+
+
+  .project-header {
+    flex-direction: column;
+  }
+
+
+  .project-dates {
+    text-align: left;
+
+    margin-top: 15px;
+  }
+
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+
+  .project-selector {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+
+  .project-selector select {
+    width: 100%;
+
+    min-width: unset;
+  }
+
+
+  .issue-top {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+
+  .issue-details {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+
+  .status-update {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+
+  .project-actions {
+    flex-wrap: wrap;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .header-buttons {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+
+  .create-project-btn,
+  .create-issue-btn,
+  .refresh-btn {
+    width: 100%;
+  }
+
+
+  .project-actions button {
+    width: 100%;
+  }
+
+}
