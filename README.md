@@ -1,552 +1,480 @@
-<div class="dashboard">
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { UserService } from '../../services/user.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink
+  ],
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
+})
+export class LoginComponent {
+
+  user = {
+    email: '',
+    password: '',
+    role: ''
+  };
+
+  errorMessage = '';
+
+  constructor(
+    private userService: UserService,
+    private router: Router
+  ) {}
+
+  login() {
+
+    this.errorMessage = '';
+
+    this.userService.login(this.user).subscribe({
+
+      next: (response) => {
+
+        console.log('Login successful');
+        console.log(response);
+
+        localStorage.setItem(
+          'user',
+          JSON.stringify(response)
+        );
+
+        if (response.role === 'Project_Owner') {
+          this.router.navigate(['/owner-dashboard']);
+        } else if (response.role === 'Assignee') {
+          this.router.navigate(['/assignee-dashboard']);
+        }
+
+      },
+
+      error: (error) => {
+
+        console.log(error);
+
+        this.errorMessage = 'Invalid email or password';
+
+      }
+
+    });
+  }
+}
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators
+} from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { UserService } from '../../services/user.service';
+
+@Component({
+  selector: 'app-signup',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink
+  ],
+  templateUrl: './signup.component.html',
+  styleUrl: './signup.component.css'
+})
+export class SignupComponent {
+
+  signupForm!: FormGroup;
+
+  constructor(private formBuilder: FormBuilder, private userService: UserService) {
+
+    this.signupForm = this.formBuilder.group({
+
+      name: ['', Validators.required],
+
+      email: ['', [
+        Validators.required,
+        Validators.email
+      ]],
+
+      password: ['', Validators.required],
+
+      profile: ['', [
+        Validators.required,
+        Validators.pattern('https?://.+')
+      ]],
+
+      role: ['', Validators.required]
+
+    });
+
+  }
+
+  signup() {
+  if (this.signupForm.invalid) {
+    return;
+  }
+
+  console.log('Signup details:');
+  console.log(this.signupForm.value);
+
+  this.userService.signup(this.signupForm.value).subscribe({
+    next: (response) => {
+      console.log('Signup successful:', response);
+      alert('Signup successful!');
+    },
+    error: (error) => {
+      console.error('Signup failed:', error);
+      alert('Signup failed!');
+    }
+  });
+}
+
+}
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { User } from '../models/user';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+
+  private apiUrl = 'http://localhost:8081/api/users';
+
+  constructor(private http: HttpClient) {}
+
+  signup(user: User): Observable<User> {
+    return this.http.post<User>(this.apiUrl, user);
+  }
+
+  login(user: {
+  email: string;
+  password: string;
+  role: string;
+}): Observable<User> {
+
+  return this.http.post<User>(
+    this.apiUrl + '/login',
+    user
+  );
+}
+
+
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.apiUrl);
+  }
+
+  getUserById(id: number): Observable<User> {
+    return this.http.get<User>(
+      this.apiUrl + '/' + id
+    );
+  }
+
+  getUserIssues(id: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      this.apiUrl + '/' + id + '/issues'
+    );
+  }
+}
+
+
+package com.its.user.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.its.user.client.IssueClient;
+import com.its.user.model.User;
+import com.its.user.service.UserService;
+
+import jakarta.validation.Valid;
+
+@CrossOrigin(origins = "http://localhost:4300")
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+    private final IssueClient issueClient;
+
+    public UserController(UserService userService, IssueClient issueClient) {
+        this.userService = userService;
+        this.issueClient = issueClient;
+    }
+
+    // Get all users
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+
+        return new ResponseEntity<>(
+                userService.getAllUsers(),
+                HttpStatus.OK
+        );
+    }
+
+    // Register a new user
+    @PostMapping
+    public ResponseEntity<User> registerUser(
+            @Valid @RequestBody User user) {
+
+        return new ResponseEntity<>(
+                userService.registerUser(user),
+                HttpStatus.CREATED
+        );
+    }
+
+    // Login
+    @PostMapping("/login")
+    public ResponseEntity<User> login(
+            @RequestBody User user) {
+
+        return new ResponseEntity<>(
+                userService.login(
+                        user.getEmail(),
+                        user.getPassword()
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    // Get user by ID
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUserById(
+            @PathVariable Long userId) {
+
+        return new ResponseEntity<>(
+                userService.getUserById(userId),
+                HttpStatus.OK
+        );
+    }
+
+    // Get issues assigned to a user by user ID
+    // Inter-service communication: User Service -> Issue Service
+    @GetMapping("/{userId}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getUserIssues(
+            @PathVariable Long userId) {
+
+        return new ResponseEntity<>(
+                issueClient.getIssuesByAssignee(userId),
+                HttpStatus.OK
+        );
+    }
+
+    // Get issues assigned to a user by username
+    // Inter-service communication: User Service -> Issue Service
+    @GetMapping("/username/{username}/issues")
+    public ResponseEntity<List<Map<String, Object>>> getUserIssuesByUsername(
+            @PathVariable String username) {
+
+        User user = userService.getUserByName(username);
+
+        return new ResponseEntity<>(
+                issueClient.getIssuesByAssignee(user.getId()),
+                HttpStatus.OK
+        );
+    }
+}
+
+
+package com.its.user.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-  <!-- ===================================================== -->
-  <!-- HEADER -->
-  <!-- ===================================================== -->
+@Entity
+@Table(name = "users")
+public class User {
 
-  <div class="dashboard-header">
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    <div>
+    @NotBlank(message = "Name is required")
+    private String name;
 
-      <h1>
-        Assignee Dashboard
-      </h1>
+    @NotBlank(message = "Email is required")
+    @Email(message = "Please enter a valid email")
+    private String email;
 
-      <p class="subtitle">
-        View and manage your assigned issues
-      </p>
+    @NotBlank(message = "Password is required")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
-    </div>
+    private String profileImage;
 
+    @NotBlank(message = "Role is required")
+    private String role;
 
-    <div class="header-actions">
+    public User() {
+    }
 
-      <button
-        type="button"
-        class="refresh-button"
-        (click)="refreshDashboard()">
+    public Long getId() {
+        return id;
+    }
 
-        Refresh
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-      </button>
+    public String getName() {
+        return name;
+    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
 
-      <button
-        type="button"
-        class="logout-button"
-        (click)="logout()">
+    public String getEmail() {
+        return email;
+    }
 
-        Logout
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-      </button>
+    public String getPassword() {
+        return password;
+    }
 
-    </div>
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-  </div>
+    public String getProfileImage() {
+        return profileImage;
+    }
 
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 
-  <!-- ===================================================== -->
-  <!-- PROFILE -->
-  <!-- ===================================================== -->
+    public String getRole() {
+        return role;
+    }
 
-  <div class="profile-card">
+    public void setRole(String role) {
+        this.role = role;
+    }
+}
+package com.its.user.repository;
 
-    <div class="profile-avatar">
+import org.springframework.data.jpa.repository.JpaRepository;
 
-      {{ assigneeName.charAt(0) }}
+import com.its.user.model.User;
 
-    </div>
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    <div>
+    User findByEmail(String email);
 
-      <h3>
-        {{ assigneeName }}
-      </h3>
+    User findByName(String name);
+}
+package com.its.user.service;
 
-      <p>
-        Assignee ID: {{ assigneeId }}
-      </p>
+import java.util.List;
 
-    </div>
+import com.its.user.model.User;
 
-  </div>
+public interface UserService {
 
+    User registerUser(User user);
 
-  <!-- ===================================================== -->
-  <!-- ERROR -->
-  <!-- ===================================================== -->
+    User login(String email, String password);
 
-  <div
-    class="error-message"
-    *ngIf="errorMessage">
+    User getUserById(Long id);
 
-    {{ errorMessage }}
+    User getUserByName(String name);
 
-  </div>
+    List<User> getAllUsers();
+}
+package com.its.user.service;
 
+import java.util.List;
 
-  <!-- ===================================================== -->
-  <!-- SUCCESS -->
-  <!-- ===================================================== -->
+import org.springframework.stereotype.Service;
 
-  <div
-    class="success-message"
-    *ngIf="successMessage">
+import com.its.user.exception.InvalidCredentialsException;
+import com.its.user.exception.UserNotFoundException;
+import com.its.user.model.User;
+import com.its.user.repository.UserRepository;
 
-    {{ successMessage }}
+@Service
+public class UserServiceImpl implements UserService {
 
-  </div>
+    private final UserRepository userRepository;
 
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-  <!-- ===================================================== -->
-  <!-- SEARCH -->
-  <!-- ===================================================== -->
+    @Override
+    public User registerUser(User user) {
+        return userRepository.save(user);
+    }
 
-  <div class="search-section">
+    @Override
+    public User login(String email, String password) {
 
-    <input
-      type="text"
-      [(ngModel)]="searchText"
-      placeholder="Search by summary or description..."
-    />
+        User user = userRepository.findByEmail(email);
 
-  </div>
+        if (user == null || !user.getPassword().equals(password)) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
 
+        return user;
+    }
 
-  <!-- ===================================================== -->
-  <!-- STATISTICS -->
-  <!-- ===================================================== -->
+    @Override
+    public User getUserById(Long id) {
 
-  <div class="stats">
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                    new UserNotFoundException(
+                        "User not found with id: " + id
+                    )
+                );
+    }
 
-    <div class="stat-card">
+    @Override
+    public User getUserByName(String name) {
 
-      <div class="stat-number">
-        {{ getTotalIssues() }}
-      </div>
+        User user = userRepository.findByName(name);
 
-      <div class="stat-label">
-        Total Assigned
-      </div>
+        if (user == null) {
+            throw new UserNotFoundException(
+                "User not found with name: " + name
+            );
+        }
 
-    </div>
+        return user;
+    }
 
-
-    <div class="stat-card">
-
-      <div class="stat-number">
-        {{ getTodoCount() }}
-      </div>
-
-      <div class="stat-label">
-        TO-DO
-      </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-      <div class="stat-number">
-        {{ getDevelopmentCount() }}
-      </div>
-
-      <div class="stat-label">
-        Development
-      </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-      <div class="stat-number">
-        {{ getTestingCount() }}
-      </div>
-
-      <div class="stat-label">
-        Testing
-      </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-      <div class="stat-number">
-        {{ getCompletedCount() }}
-      </div>
-
-      <div class="stat-label">
-        Completed
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ===================================================== -->
-  <!-- LOADING -->
-  <!-- ===================================================== -->
-
-  <div
-    class="loading"
-    *ngIf="loading">
-
-    Loading assigned issues...
-
-  </div>
-
-
-  <!-- ===================================================== -->
-  <!-- NO ISSUES -->
-  <!-- ===================================================== -->
-
-  <div
-    class="empty-message"
-    *ngIf="
-      !loading &&
-      filteredIssues.length === 0 &&
-      !errorMessage
-    ">
-
-    No assigned issues found.
-
-  </div>
-
-
-  <!-- ===================================================== -->
-  <!-- KANBAN BOARD -->
-  <!-- ===================================================== -->
-
-  <div
-    class="kanban"
-    *ngIf="
-      !loading &&
-      filteredIssues.length > 0
-    ">
-
-
-    <!-- ================================================= -->
-    <!-- TO-DO -->
-    <!-- ================================================= -->
-
-    <div class="column">
-
-      <div class="column-header todo-header">
-
-        <h2>
-          TO-DO
-        </h2>
-
-        <span>
-          {{ getTodoIssues().length }}
-        </span>
-
-      </div>
-
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of getTodoIssues()"
-        (click)="openIssue(issue)">
-
-        <h3 class="issue-title">
-
-          {{ issue.summary }}
-
-        </h3>
-
-
-        <p class="issue-description">
-
-          {{ issue.description }}
-
-        </p>
-
-
-        <div class="issue-info">
-
-          <span>
-
-            <strong>Priority:</strong>
-
-            <span
-              [ngClass]="
-                getPriorityClass(issue.priority)
-              ">
-
-              {{ issue.priority }}
-
-            </span>
-
-          </span>
-
-
-          <span>
-
-            <strong>Type:</strong>
-
-            {{ issue.type }}
-
-          </span>
-
-
-          <span>
-
-            <strong>Story:</strong>
-
-            {{ issue.storyPoint }}
-
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- DEVELOPMENT -->
-    <!-- ================================================= -->
-
-    <div class="column">
-
-      <div class="column-header development-header">
-
-        <h2>
-          Development
-        </h2>
-
-        <span>
-          {{ getDevelopmentIssues().length }}
-        </span>
-
-      </div>
-
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of getDevelopmentIssues()"
-        (click)="openIssue(issue)">
-
-        <h3 class="issue-title">
-
-          {{ issue.summary }}
-
-        </h3>
-
-
-        <p class="issue-description">
-
-          {{ issue.description }}
-
-        </p>
-
-
-        <div class="issue-info">
-
-          <span>
-
-            <strong>Priority:</strong>
-
-            <span
-              [ngClass]="
-                getPriorityClass(issue.priority)
-              ">
-
-              {{ issue.priority }}
-
-            </span>
-
-          </span>
-
-
-          <span>
-
-            <strong>Type:</strong>
-
-            {{ issue.type }}
-
-          </span>
-
-
-          <span>
-
-            <strong>Story:</strong>
-
-            {{ issue.storyPoint }}
-
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- TESTING -->
-    <!-- ================================================= -->
-
-    <div class="column">
-
-      <div class="column-header testing-header">
-
-        <h2>
-          Testing
-        </h2>
-
-        <span>
-          {{ getTestingIssues().length }}
-        </span>
-
-      </div>
-
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of getTestingIssues()"
-        (click)="openIssue(issue)">
-
-        <h3 class="issue-title">
-
-          {{ issue.summary }}
-
-        </h3>
-
-
-        <p class="issue-description">
-
-          {{ issue.description }}
-
-        </p>
-
-
-        <div class="issue-info">
-
-          <span>
-
-            <strong>Priority:</strong>
-
-            <span
-              [ngClass]="
-                getPriorityClass(issue.priority)
-              ">
-
-              {{ issue.priority }}
-
-            </span>
-
-          </span>
-
-
-          <span>
-
-            <strong>Type:</strong>
-
-            {{ issue.type }}
-
-          </span>
-
-
-          <span>
-
-            <strong>Story:</strong>
-
-            {{ issue.storyPoint }}
-
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- COMPLETED -->
-    <!-- ================================================= -->
-
-    <div class="column">
-
-      <div class="column-header completed-header">
-
-        <h2>
-          Completed
-        </h2>
-
-        <span>
-          {{ getCompletedIssues().length }}
-        </span>
-
-      </div>
-
-
-      <div
-        class="issue-card"
-        *ngFor="let issue of getCompletedIssues()"
-        (click)="openIssue(issue)">
-
-        <h3 class="issue-title">
-
-          {{ issue.summary }}
-
-        </h3>
-
-
-        <p class="issue-description">
-
-          {{ issue.description }}
-
-        </p>
-
-
-        <div class="issue-info">
-
-          <span>
-
-            <strong>Priority:</strong>
-
-            <span
-              [ngClass]="
-                getPriorityClass(issue.priority)
-              ">
-
-              {{ issue.priority }}
-
-            </span>
-
-          </span>
-
-
-          <span>
-
-            <strong>Type:</strong>
-
-            {{ issue.type }}
-
-          </span>
-
-
-          <span>
-
-            <strong>Story:</strong>
-
-            {{ issue.storyPoint }}
-
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+}
