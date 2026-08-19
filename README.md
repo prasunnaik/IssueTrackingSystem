@@ -1,26 +1,28 @@
-ngOnInit(): void {
+@Override
+public User login(
+        String email,
+        String password,
+        String role) {
 
-  const storedUser = localStorage.getItem('user');
+    User user = userRepository.findByEmail(email);
 
-  if (!storedUser) {
+    if (user == null ||
+        !user.getPassword().equals(password) ||
+        !user.getRole().equals(role)) {
 
-    this.router.navigate(['/login']);
+        throw new InvalidCredentialsException(
+            "Invalid email, password or role"
+        );
+    }
 
-    return;
-  }
-
-  const user = JSON.parse(storedUser);
-
-  this.assigneeId = Number(user.id);
-  this.assigneeName = user.name || 'Assignee';
-
-  if (!this.assigneeId) {
-
-    this.errorMessage =
-      'Logged-in user information is missing.';
-
-    return;
-  }
-
-  this.loadIssues();
+    return user;
 }
+
+return new ResponseEntity<>(
+        userService.login(
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole()
+        ),
+        HttpStatus.OK
+);
