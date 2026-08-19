@@ -1,677 +1,957 @@
-<div class="app-layout">
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+import { IssueService } from '../../services/issue.service';
+import { ProjectService } from '../../services/project.service';
 
-    <div class="profile-section">
+import { Issue } from '../../models/issue';
+import { Project } from '../../models/project';
 
-      <img
-        class="profile-image"
-        [src]="profileImage"
-        [alt]="ownerName + ' Profile'"
-        (error)="handleImageError()"
-      />
 
-      <h3>{{ ownerName }}</h3>
+@Component({
+  selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './owner-dashboard.component.html',
+  styleUrls: ['./owner-dashboard.component.css']
+})
+export class OwnerDashboardComponent implements OnInit {
 
-      <p class="profile-email">
-        {{ ownerEmail }}
-      </p>
+  // =========================================================
+  // LOGGED-IN OWNER
+  // =========================================================
 
-      <div class="profile-stats">
+  ownerId: number = 0;
 
-        <div class="profile-stat">
-          <strong>{{ projects.length }}</strong>
-          <span>Projects</span>
-        </div>
+  ownerName: string = 'Project Owner';
 
-        <div class="profile-stat">
-          <strong>{{ issues.length }}</strong>
-          <span>Issues</span>
-        </div>
+  ownerEmail: string = '';
 
-      </div>
+  profileImage: string = 'assets/default-profile.png';
 
-    </div>
 
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-    <!-- MENU -->
-    <nav class="sidebar-menu">
+  searchText: string = '';
 
-      <button
-        type="button"
-        class="sidebar-link active"
-        (click)="refreshDashboard()">
 
-        <span class="menu-icon">📊</span>
-        Project Dashboard
+  // =========================================================
+  // PROJECTS
+  // =========================================================
 
-      </button>
+  projects: Project[] = [];
 
-      <button
-        type="button"
-        class="sidebar-link"
-        (click)="createProject()">
+  selectedProject: Project | null = null;
 
-        <span class="menu-icon">📁</span>
-        Create Project
 
-      </button>
+  // =========================================================
+  // EDIT PROJECT
+  // =========================================================
 
-      <button
-        type="button"
-        class="sidebar-link"
-        (click)="createIssue()">
+  editMode: boolean = false;
 
-        <span class="menu-icon">📝</span>
-        Create Issue
+  editProjectData: Project = {
+    projectName: '',
+    productOwnerId: 1,
+    startDate: '',
+    endDate: ''
+  };
 
-      </button>
 
-    </nav>
+  // =========================================================
+  // ISSUES
+  // =========================================================
 
+  issues: Issue[] = [];
 
-    <!-- LOGOUT -->
-    <button
-      type="button"
-      class="sidebar-logout"
-      (click)="logout()">
 
-      Logout
+  // =========================================================
+  // FILTER
+  // =========================================================
 
-    </button>
+  selectedFilter: string = 'ALL';
 
-  </aside>
 
+  // =========================================================
+  // MESSAGES
+  // =========================================================
 
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
+  errorMessage: string = '';
 
-    <!-- HEADER -->
-    <header class="app-header">
+  successMessage: string = '';
 
-      <div class="search-container">
 
-        <input
-          type="text"
-          [(ngModel)]="searchText"
-          placeholder="Search issue by summary or description"
-        />
+  // =========================================================
+  // KANBAN COLUMNS
+  // =========================================================
 
-        <button
-          type="button"
-          class="search-button">
+  kanbanColumns = [
+    {
+      status: 'OPEN',
+      title: 'TO DO',
+      headerClass: 'open-header'
+    },
+    {
+      status: 'IN_PROGRESS',
+      title: 'DEVELOPMENT',
+      headerClass: 'progress-header'
+    },
+    {
+      status: 'CLOSED',
+      title: 'COMPLETED',
+      headerClass: 'closed-header'
+    }
+  ];
 
-          🔍
 
-        </button>
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
 
-      </div>
+  constructor(
+    private projectService: ProjectService,
+    private issueService: IssueService,
+    private router: Router
+  ) {}
 
-      <div class="application-name">
-        Issue Tracking System
-      </div>
 
-    </header>
+  // =========================================================
+  // INIT
+  // =========================================================
 
+  ngOnInit(): void {
 
-    <!-- DASHBOARD -->
-    <div class="dashboard">
+    const storedUser = localStorage.getItem('user');
 
-      <!-- HEADING -->
-      <div class="dashboard-heading">
+    if (!storedUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
 
-        <div>
+    try {
 
-          <h1>
-            Project Dashboard
-          </h1>
+      const user = JSON.parse(storedUser);
 
-          <p class="subtitle">
-            Manage your projects and track issues
-          </p>
+      this.ownerId = Number(user.id);
 
-        </div>
+      this.ownerName =
+        user.name || 'Project Owner';
 
-        <button
-          type="button"
-          class="refresh-main-btn"
-          (click)="refreshDashboard()">
+      this.ownerEmail =
+        user.email || '';
 
-          Refresh
+      this.profileImage =
+        user.profileImage ||
+        user.profileImageUrl ||
+        user.profile ||
+        user.image ||
+        'assets/default-profile.png';
 
-        </button>
+      this.setProfileImagePath();
 
-      </div>
+    } catch (error) {
 
+      console.error(
+        'Failed to read logged-in user:',
+        error
+      );
 
-      <!-- MESSAGES -->
-      <div
-        class="error-message"
-        *ngIf="errorMessage">
+      this.router.navigate(['/login']);
 
-        {{ errorMessage }}
+      return;
+    }
 
-      </div>
+    if (!this.ownerId) {
 
-      <div
-        class="success-message"
-        *ngIf="successMessage">
+      this.errorMessage =
+        'Logged-in user information is missing.';
 
-        {{ successMessage }}
+      return;
+    }
 
-      </div>
+    this.loadProjects();
+  }
 
 
-      <!-- NO PROJECTS -->
-      <div
-        class="no-projects-screen"
-        *ngIf="projects.length === 0 && !errorMessage">
+  // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
 
-        <div class="no-projects-icon">
-          📁
-        </div>
+  private setProfileImagePath(): void {
 
-        <h2>
-          No Projects Available
-        </h2>
+    if (
+      this.profileImage &&
+      !this.profileImage.startsWith('http') &&
+      !this.profileImage.startsWith('https') &&
+      !this.profileImage.startsWith('data:image') &&
+      !this.profileImage.startsWith('assets/')
+    ) {
 
-        <p>
-          You don't have any projects yet.
-        </p>
+      this.profileImage =
+        'assets/' + this.profileImage;
+    }
+  }
 
-        <button
-          type="button"
-          class="create-project-empty-btn"
-          (click)="createProject()">
 
-          Create Project
+  handleImageError(): void {
 
-        </button>
+    this.profileImage =
+      'assets/default-profile.png';
+  }
 
-      </div>
 
+  // =========================================================
+  // LOAD PROJECTS
+  // =========================================================
 
-      <!-- PROJECT DASHBOARD -->
-      <ng-container
-        *ngIf="projects.length > 0 && !editMode">
+  loadProjects(): void {
 
-        <!-- PROJECT SELECTOR -->
-        <div class="project-selector">
+    this.errorMessage = '';
 
-          <div class="selector-left">
+    this.projectService
+      .getProjectsByOwner(this.ownerId)
+      .subscribe({
 
-            <label for="projectSelect">
-              Project Name
-            </label>
+        next: (data: Project[]) => {
 
-            <select
-              id="projectSelect"
-              [ngModel]="selectedProject"
-              (ngModelChange)="selectProject($event)">
+          this.projects = data || [];
 
-              <option
-                *ngFor="let project of projects"
-                [ngValue]="project">
+          if (!this.projects.length) {
 
-                {{ project.projectName }}
+            this.selectedProject = null;
+            this.issues = [];
 
-              </option>
+            return;
+          }
 
-            </select>
+          this.setSelectedProject();
 
-          </div>
+          this.loadIssues();
+        },
 
-          <div class="owner-name-display">
+        error: (error: any) => {
 
-            <span>
-              Project Owner:
-            </span>
+          console.error(
+            'Failed to load projects:',
+            error
+          );
 
-            <strong>
-              {{ ownerName }}
-            </strong>
+          this.errorMessage =
+            'Failed to load projects.';
 
-          </div>
+          this.projects = [];
+          this.selectedProject = null;
+          this.issues = [];
+        }
 
-        </div>
+      });
+  }
 
 
-        <!-- SELECTED PROJECT -->
-        <div
-          class="project-card"
-          *ngIf="selectedProject">
+  // =========================================================
+  // SET SELECTED PROJECT
+  // =========================================================
 
-          <!-- PROJECT INFORMATION -->
-          <div class="project-information">
+  private setSelectedProject(): void {
 
-            <div class="project-info-left">
+    if (!this.selectedProject?.id) {
 
-              <h2>
-                {{ selectedProject.projectName }}
-              </h2>
+      this.selectedProject =
+        this.projects[0];
 
-              <p>
-                <strong>Project ID:</strong>
-                {{ selectedProject.id }}
-              </p>
+      return;
+    }
 
-              <p>
-                <strong>Project Owner:</strong>
-                {{ ownerName }}
-              </p>
+    const existingProject =
+      this.projects.find(
+        project =>
+          project.id === this.selectedProject?.id
+      );
 
-            </div>
+    this.selectedProject =
+      existingProject || this.projects[0];
+  }
 
-            <div class="project-dates">
 
-              <div>
-                <span>Start Date</span>
-                <strong>
-                  {{ selectedProject.startDate }}
-                </strong>
-              </div>
+  // =========================================================
+  // SELECT PROJECT
+  // =========================================================
 
-              <div>
-                <span>End Date</span>
-                <strong>
-                  {{ selectedProject.endDate }}
-                </strong>
-              </div>
+  selectProject(project: Project): void {
 
-            </div>
+    this.selectedProject = project;
 
-          </div>
+    this.selectedFilter = 'ALL';
 
+    this.searchText = '';
 
-          <!-- ACTIONS -->
-          <div class="project-actions">
+    this.issues = [];
 
-            <button
-              type="button"
-              class="edit-button"
-              (click)="startEditProject()">
+    this.errorMessage = '';
 
-              Edit Project
+    this.editMode = false;
 
-            </button>
+    this.loadIssues();
+  }
 
-            <button
-              type="button"
-              class="delete-button"
-              (click)="deleteProject()">
 
-              Delete Project
+  // =========================================================
+  // LOAD ISSUES
+  // =========================================================
 
-            </button>
+  loadIssues(): void {
 
-          </div>
+    if (
+      !this.selectedProject?.id
+    ) {
 
+      this.issues = [];
 
-          <!-- STATISTICS -->
-          <div class="stats">
+      return;
+    }
 
-            <div class="stat-card">
-              <div class="stat-number">
-                {{ getTotalIssues() }}
-              </div>
-              <div class="stat-label">
-                Total Issues
-              </div>
-            </div>
+    this.issueService
+      .getIssuesByProject(
+        this.selectedProject.id
+      )
+      .subscribe({
 
-            <div class="stat-card">
-              <div class="stat-number">
-                {{ getOpenIssues() }}
-              </div>
-              <div class="stat-label">
-                Open
-              </div>
-            </div>
+        next: (data: Issue[]) => {
 
-            <div class="stat-card">
-              <div class="stat-number">
-                {{ getInProgressIssues() }}
-              </div>
-              <div class="stat-label">
-                In Progress
-              </div>
-            </div>
+          this.issues = data || [];
 
-            <div class="stat-card">
-              <div class="stat-number">
-                {{ getHighPriorityIssues() }}
-              </div>
-              <div class="stat-label">
-                High Priority
-              </div>
-            </div>
+          this.errorMessage = '';
+        },
 
-            <div class="stat-card">
-              <div class="stat-number">
-                {{ getClosedIssues() }}
-              </div>
-              <div class="stat-label">
-                Closed
-              </div>
-            </div>
+        error: (error: any) => {
 
-          </div>
+          console.error(
+            'Failed to load issues:',
+            error
+          );
 
+          this.issues = [];
 
-          <!-- FILTERS -->
-          <div class="filters">
+          this.errorMessage =
+            'Failed to load issues.';
+        }
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'ALL'"
-              (click)="filterIssues('ALL')">
-              All
-            </button>
+      });
+  }
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'OPEN'"
-              (click)="filterIssues('OPEN')">
-              Open
-            </button>
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'IN_PROGRESS'"
-              (click)="filterIssues('IN_PROGRESS')">
-              In Progress
-            </button>
+  // =========================================================
+  // REFRESH
+  // =========================================================
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'HIGH'"
-              (click)="filterIssues('HIGH')">
-              High Priority
-            </button>
+  refreshDashboard(): void {
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'MEDIUM'"
-              (click)="filterIssues('MEDIUM')">
-              Medium
-            </button>
+    this.editMode = false;
 
-            <button
-              type="button"
-              [class.active]="selectedFilter === 'CLOSED'"
-              (click)="filterIssues('CLOSED')">
-              Closed
-            </button>
+    this.successMessage = '';
 
-          </div>
+    this.searchText = '';
 
+    this.loadProjects();
+  }
 
-          <!-- ISSUES -->
-          <div class="issues-section">
 
-            <div class="issues-heading">
+  // =========================================================
+  // NAVIGATION
+  // =========================================================
 
-              <h2>Issues</h2>
+  createProject(): void {
 
-              <span>
-                {{ filteredIssues.length }} issues
-              </span>
+    this.router.navigate([
+      '/create-project'
+    ]);
+  }
 
-            </div>
 
+  createIssue(): void {
 
-            <div
-              class="no-issues"
-              *ngIf="filteredIssues.length === 0">
+    this.router.navigate([
+      '/create-issue'
+    ]);
+  }
 
-              No issues found for this project.
 
-            </div>
+  logout(): void {
 
+    localStorage.removeItem('user');
 
-            <!-- KANBAN -->
-            <div
-              class="kanban-board"
-              *ngIf="filteredIssues.length > 0">
+    this.router.navigate(['/login']);
+  }
 
-              <div
-                class="kanban-column"
-                *ngFor="let column of kanbanColumns">
 
-                <!-- COLUMN HEADER -->
-                <div
-                  class="kanban-column-header"
-                  [ngClass]="column.headerClass">
+  // =========================================================
+  // EDIT PROJECT
+  // =========================================================
 
-                  <span>
-                    {{ column.title }}
-                  </span>
+  startEditProject(): void {
 
-                  <span class="column-count">
-                    {{ getBoardIssues(column.status).length }}
-                  </span>
+    if (!this.selectedProject) {
 
-                </div>
+      alert(
+        'Please select a project.'
+      );
 
+      return;
+    }
 
-                <!-- CARDS -->
-                <div class="kanban-cards">
+    this.errorMessage = '';
 
-                  <div
-                    class="kanban-issue"
-                    *ngFor="
-                      let issue of
-                      getBoardIssues(column.status)
-                    ">
+    this.successMessage = '';
 
-                    <div class="issue-card-header">
+    this.editProjectData = {
+      id: this.selectedProject.id,
+      projectName:
+        this.selectedProject.projectName,
+      productOwnerId:
+        this.selectedProject.productOwnerId,
+      startDate:
+        this.selectedProject.startDate,
+      endDate:
+        this.selectedProject.endDate
+    };
 
-                      <span class="issue-number">
-                        ID: {{ issue.id }}
-                      </span>
+    this.editMode = true;
+  }
 
-                      <span
-                        class="priority-badge"
-                        [ngClass]="
-                          getPriorityClass(issue.priority)
-                        ">
 
-                        {{ issue.priority }}
+  cancelEditProject(): void {
 
-                      </span>
+    this.editMode = false;
 
-                    </div>
+    this.errorMessage = '';
 
+    this.successMessage = '';
+  }
 
-                    <h3
-                      (click)="openIssueDetails(issue)">
 
-                      {{ issue.summary }}
+  // =========================================================
+  // SAVE PROJECT
+  // =========================================================
 
-                    </h3>
+  saveProject(): void {
 
+    const project =
+      this.editProjectData;
 
-                    <p class="issue-description">
-                      {{ issue.description }}
-                    </p>
+    if (!project.id) {
 
+      this.errorMessage =
+        'Project ID is missing.';
 
-                    <div class="issue-meta">
+      return;
+    }
 
-                      <span>
-                        Type: {{ issue.type }}
-                      </span>
+    if (!project.projectName?.trim()) {
 
-                      <span>
-                        Points: {{ issue.storyPoint }}
-                      </span>
+      this.errorMessage =
+        'Project name is required.';
 
-                    </div>
+      return;
+    }
 
+    if (!project.productOwnerId) {
 
-                    <div class="issue-assignee">
+      this.errorMessage =
+        'Product owner ID is required.';
 
-                      <span>
-                        Assignee:
-                      </span>
+      return;
+    }
 
-                      <strong>
-                        #{{ issue.assigneeId }}
-                      </strong>
+    if (!project.startDate) {
 
-                    </div>
+      this.errorMessage =
+        'Start date is required.';
 
+      return;
+    }
 
-                    <div class="card-controls">
+    if (!project.endDate) {
 
-                      <select
-                        [ngModel]="issue.priority"
-                        (change)="updatePriority(issue, $event)">
+      this.errorMessage =
+        'End date is required.';
 
-                        <option value="HIGH">
-                          HIGH
-                        </option>
+      return;
+    }
 
-                        <option value="MEDIUM">
-                          MEDIUM
-                        </option>
+    if (
+      project.endDate <
+      project.startDate
+    ) {
 
-                        <option value="LOW">
-                          LOW
-                        </option>
+      this.errorMessage =
+        'End date cannot be before start date.';
 
-                      </select>
+      return;
+    }
 
+    this.errorMessage = '';
 
-                      <select
-                        [ngModel]="issue.status"
-                        (change)="updateStatus(issue, $event)">
+    this.successMessage = '';
 
-                        <option value="OPEN">
-                          OPEN
-                        </option>
+    this.projectService
+      .updateProject(
+        project.id,
+        project
+      )
+      .subscribe({
 
-                        <option value="IN_PROGRESS">
-                          IN PROGRESS
-                        </option>
+        next: (updatedProject: Project) => {
 
-                        <option value="CLOSED">
-                          CLOSED
-                        </option>
+          this.successMessage =
+            'Project updated successfully.';
 
-                      </select>
+          this.editMode = false;
 
-                    </div>
+          this.selectedProject =
+            updatedProject;
 
-                  </div>
+          this.loadProjects();
+        },
 
-                </div>
+        error: (error: any) => {
 
-              </div>
+          console.error(
+            'Failed to update project:',
+            error
+          );
 
-            </div>
+          this.errorMessage =
+            'Failed to update project.';
+        }
 
-          </div>
+      });
+  }
 
-        </div>
 
-      </ng-container>
+  // =========================================================
+  // DELETE PROJECT
+  // =========================================================
 
+  deleteProject(): void {
 
-      <!-- EDIT PROJECT -->
-      <div
-        class="edit-project-card"
-        *ngIf="editMode">
+    if (!this.selectedProject?.id) {
 
-        <h2>
-          Edit Project
-        </h2>
+      alert(
+        'Please select a project.'
+      );
 
-        <div class="form-group">
+      return;
+    }
 
-          <label>
-            Project Name
-          </label>
+    const projectName =
+      this.selectedProject.projectName;
 
-          <input
-            type="text"
-            [(ngModel)]="editProjectData.projectName"
-            placeholder="Project name"
-          />
+    const projectId =
+      this.selectedProject.id;
 
-        </div>
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${projectName}"?`
+      )
+    ) {
+      return;
+    }
 
+    this.errorMessage = '';
 
-        <div class="form-group">
+    this.successMessage = '';
 
-          <label>
-            Product Owner ID
-          </label>
+    this.projectService
+      .deleteProject(projectId)
+      .subscribe({
 
-          <input
-            type="number"
-            [(ngModel)]="editProjectData.productOwnerId"
-            min="1"
-          />
+        next: () => {
 
-        </div>
+          this.successMessage =
+            'Project deleted successfully.';
 
+          this.selectedProject = null;
 
-        <div class="form-group">
+          this.issues = [];
 
-          <label>
-            Start Date
-          </label>
+          this.editMode = false;
 
-          <input
-            type="date"
-            [(ngModel)]="editProjectData.startDate"
-          />
+          this.loadProjects();
+        },
 
-        </div>
+        error: (error: any) => {
 
+          console.error(
+            'Failed to delete project:',
+            error
+          );
 
-        <div class="form-group">
+          this.errorMessage =
+            'Failed to delete project.';
+        }
 
-          <label>
-            End Date
-          </label>
+      });
+  }
 
-          <input
-            type="date"
-            [(ngModel)]="editProjectData.endDate"
-          />
 
-        </div>
+  // =========================================================
+  // FILTER
+  // =========================================================
 
+  filterIssues(filter: string): void {
 
-        <div class="edit-buttons">
+    this.selectedFilter = filter;
+  }
 
-          <button
-            class="save-button"
-            type="button"
-            (click)="saveProject()">
 
-            Save Changes
+  // =========================================================
+  // FILTERED ISSUES
+  // =========================================================
 
-          </button>
+  get filteredIssues(): Issue[] {
 
-          <button
-            class="cancel-button"
-            type="button"
-            (click)="cancelEditProject()">
+    let result = this.issues;
 
-            Cancel
+    if (this.selectedFilter !== 'ALL') {
 
-          </button>
+      result = result.filter(issue => {
 
-        </div>
+        if (
+          this.selectedFilter === 'HIGH' ||
+          this.selectedFilter === 'MEDIUM'
+        ) {
 
-      </div>
+          return issue.priority ===
+            this.selectedFilter;
+        }
 
-    </div>
+        return issue.status ===
+          this.selectedFilter;
+      });
+    }
 
-  </main>
+    const search =
+      this.searchText.trim().toLowerCase();
 
-</div>
+    if (search) {
+
+      result = result.filter(issue => {
+
+        const summary =
+          issue.summary?.toLowerCase() || '';
+
+        const description =
+          issue.description?.toLowerCase() || '';
+
+        return (
+          summary.includes(search) ||
+          description.includes(search)
+        );
+      });
+    }
+
+    return result;
+  }
+
+
+  // =========================================================
+  // BOARD ISSUES
+  // =========================================================
+
+  getBoardIssues(status: string): Issue[] {
+
+    return this.filteredIssues.filter(
+      issue =>
+        issue.status === status
+    );
+  }
+
+
+  // =========================================================
+  // STATISTICS
+  // =========================================================
+
+  getTotalIssues(): number {
+
+    return this.issues.length;
+  }
+
+
+  getOpenIssues(): number {
+
+    return this.countBy('status', 'OPEN');
+  }
+
+
+  getInProgressIssues(): number {
+
+    return this.countBy(
+      'status',
+      'IN_PROGRESS'
+    );
+  }
+
+
+  getClosedIssues(): number {
+
+    return this.countBy(
+      'status',
+      'CLOSED'
+    );
+  }
+
+
+  getHighPriorityIssues(): number {
+
+    return this.countBy(
+      'priority',
+      'HIGH'
+    );
+  }
+
+
+  private countBy(
+    property: 'status' | 'priority',
+    value: string
+  ): number {
+
+    return this.issues.filter(
+      issue =>
+        issue[property] === value
+    ).length;
+  }
+
+
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
+
+  updateStatus(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (!issue.id) {
+
+      alert(
+        'Issue ID is missing.'
+      );
+
+      return;
+    }
+
+    const status =
+      (event.target as HTMLSelectElement)
+        .value;
+
+    this.issueService
+      .updateIssueStatus(
+        issue.id,
+        status
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.status =
+            updatedIssue.status;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue status:',
+            error
+          );
+
+          alert(
+            'Failed to update issue status.'
+          );
+
+          this.loadIssues();
+        }
+
+      });
+  }
+
+
+  // =========================================================
+  // UPDATE PRIORITY
+  // =========================================================
+
+  updatePriority(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (!issue.id) {
+
+      alert(
+        'Issue ID is missing.'
+      );
+
+      return;
+    }
+
+    const priority =
+      (event.target as HTMLSelectElement)
+        .value;
+
+    this.issueService
+      .updateIssuePriority(
+        issue.id,
+        priority
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.priority =
+            updatedIssue.priority;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue priority:',
+            error
+          );
+
+          alert(
+            'Failed to update issue priority.'
+          );
+
+          this.loadIssues();
+        }
+
+      });
+  }
+
+
+  // =========================================================
+  // UPDATE ASSIGNEE
+  // =========================================================
+
+  updateAssignee(
+    issue: Issue,
+    event: Event
+  ): void {
+
+    if (!issue.id) {
+
+      alert(
+        'Issue ID is missing.'
+      );
+
+      return;
+    }
+
+    const assigneeId =
+      Number(
+        (event.target as HTMLSelectElement)
+          .value
+      );
+
+    if (!assigneeId) {
+
+      alert(
+        'Please select a valid assignee.'
+      );
+
+      return;
+    }
+
+    this.issueService
+      .updateIssueAssignee(
+        issue.id,
+        assigneeId
+      )
+      .subscribe({
+
+        next: (updatedIssue: Issue) => {
+
+          issue.assigneeId =
+            updatedIssue.assigneeId;
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Failed to update issue assignee:',
+            error
+          );
+
+          alert(
+            'Failed to update issue assignee.'
+          );
+
+          this.loadIssues();
+        }
+
+      });
+  }
+
+
+  // =========================================================
+  // STATUS CLASS
+  // =========================================================
+
+  getStatusClass(
+    status: string
+  ): string {
+
+    return {
+      OPEN: 'open',
+      IN_PROGRESS: 'progress',
+      CLOSED: 'closed'
+    }[status] || '';
+  }
+
+
+  // =========================================================
+  // PRIORITY CLASS
+  // =========================================================
+
+  getPriorityClass(
+    priority: string
+  ): string {
+
+    return {
+      HIGH: 'high',
+      MEDIUM: 'medium',
+      LOW: 'low'
+    }[priority] || '';
+  }
+
+
+  // =========================================================
+  // ISSUE DETAILS
+  // =========================================================
+
+  openIssueDetails(
+    issue: Issue
+  ): void {
+
+    if (!issue.id) {
+
+      alert(
+        'Issue ID is missing.'
+      );
+
+      return;
+    }
+
+    this.router.navigate([
+      '/issue',
+      issue.id
+    ]);
+  }
+
+}
