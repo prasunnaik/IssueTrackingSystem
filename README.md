@@ -1,319 +1,552 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+<div class="dashboard">
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
+  <!-- ===================================================== -->
+  <!-- HEADER -->
+  <!-- ===================================================== -->
 
-@Component({
-  selector: 'app-assignee-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './assignee-dashboard.component.html',
-  styleUrl: './assignee-dashboard.component.css'
-})
-export class AssigneeDashboardComponent implements OnInit {
+  <div class="dashboard-header">
 
-  // =========================================================
-  // ASSIGNEE
-  // =========================================================
+    <div>
 
-  // Temporary hardcoded ID.
-  // Later this will come from login/authentication.
-  assigneeId: number = 1;
+      <h1>
+        Assignee Dashboard
+      </h1>
 
-  assigneeName: string = 'Assignee';
+      <p class="subtitle">
+        View and manage your assigned issues
+      </p>
 
+    </div>
 
-  // =========================================================
-  // ISSUES
-  // =========================================================
 
-  issues: Issue[] = [];
+    <div class="header-actions">
 
-  loading: boolean = false;
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="refreshDashboard()">
 
-  errorMessage: string = '';
+        Refresh
 
-  successMessage: string = '';
+      </button>
 
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
+      <button
+        type="button"
+        class="logout-button"
+        (click)="logout()">
 
-  searchText: string = '';
+        Logout
 
+      </button>
 
-  // =========================================================
-  // CONSTRUCTOR
-  // =========================================================
+    </div>
 
-  constructor(
-    private issueService: IssueService,
-    private router: Router
-  ) {}
+  </div>
 
 
-  // =========================================================
-  // INIT
-  // =========================================================
+  <!-- ===================================================== -->
+  <!-- PROFILE -->
+  <!-- ===================================================== -->
 
-  ngOnInit(): void {
-    this.loadIssues();
-  }
+  <div class="profile-card">
 
+    <div class="profile-avatar">
 
-  // =========================================================
-  // LOAD ASSIGNED ISSUES
-  // =========================================================
+      {{ assigneeName.charAt(0) }}
 
-  loadIssues(): void {
+    </div>
 
-    this.loading = true;
-    this.errorMessage = '';
+    <div>
 
-    this.issueService
-      .getIssuesByAssignee(this.assigneeId)
-      .subscribe({
+      <h3>
+        {{ assigneeName }}
+      </h3>
 
-        next: (data: Issue[]) => {
+      <p>
+        Assignee ID: {{ assigneeId }}
+      </p>
 
-          this.issues = data || [];
+    </div>
 
-          this.loading = false;
-        },
+  </div>
 
-        error: (error: any) => {
 
-          console.error(
-            'Failed to load assigned issues:',
-            error
-          );
+  <!-- ===================================================== -->
+  <!-- ERROR -->
+  <!-- ===================================================== -->
 
-          this.issues = [];
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
 
-          this.loading = false;
+    {{ errorMessage }}
 
-          this.errorMessage =
-            'Failed to load assigned issues.';
-        }
-      });
-  }
+  </div>
 
 
-  // =========================================================
-  // REFRESH
-  // =========================================================
+  <!-- ===================================================== -->
+  <!-- SUCCESS -->
+  <!-- ===================================================== -->
 
-  refreshDashboard(): void {
+  <div
+    class="success-message"
+    *ngIf="successMessage">
 
-    this.successMessage = '';
+    {{ successMessage }}
 
-    this.loadIssues();
-  }
+  </div>
 
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
+  <!-- ===================================================== -->
+  <!-- SEARCH -->
+  <!-- ===================================================== -->
 
-  get filteredIssues(): Issue[] {
+  <div class="search-section">
 
-    const search =
-      this.searchText
-        .trim()
-        .toLowerCase();
+    <input
+      type="text"
+      [(ngModel)]="searchText"
+      placeholder="Search by summary or description..."
+    />
 
-    if (!search) {
-      return this.issues;
-    }
+  </div>
 
-    return this.issues.filter(issue =>
 
-      issue.summary
-        ?.toLowerCase()
-        .includes(search)
+  <!-- ===================================================== -->
+  <!-- STATISTICS -->
+  <!-- ===================================================== -->
 
-      ||
+  <div class="stats">
 
-      issue.description
-        ?.toLowerCase()
-        .includes(search)
-    );
-  }
+    <div class="stat-card">
 
+      <div class="stat-number">
+        {{ getTotalIssues() }}
+      </div>
 
-  // =========================================================
-  // TODO ISSUES
-  // =========================================================
+      <div class="stat-label">
+        Total Assigned
+      </div>
 
-  getTodoIssues(): Issue[] {
+    </div>
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'OPEN'
-    );
-  }
 
+    <div class="stat-card">
 
-  // =========================================================
-  // DEVELOPMENT ISSUES
-  // =========================================================
+      <div class="stat-number">
+        {{ getTodoCount() }}
+      </div>
 
-  getDevelopmentIssues(): Issue[] {
+      <div class="stat-label">
+        TO-DO
+      </div>
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    );
-  }
+    </div>
 
 
-  // =========================================================
-  // TESTING ISSUES
-  // =========================================================
+    <div class="stat-card">
 
-  getTestingIssues(): Issue[] {
+      <div class="stat-number">
+        {{ getDevelopmentCount() }}
+      </div>
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'TESTING'
-    );
-  }
+      <div class="stat-label">
+        Development
+      </div>
 
+    </div>
 
-  // =========================================================
-  // COMPLETED ISSUES
-  // =========================================================
 
-  getCompletedIssues(): Issue[] {
+    <div class="stat-card">
 
-    return this.filteredIssues.filter(
-      issue => issue.status === 'CLOSED'
-    );
-  }
+      <div class="stat-number">
+        {{ getTestingCount() }}
+      </div>
 
+      <div class="stat-label">
+        Testing
+      </div>
 
-  // =========================================================
-  // COUNTS
-  // =========================================================
+    </div>
 
-  getTotalIssues(): number {
 
-    return this.issues.length;
-  }
+    <div class="stat-card">
 
+      <div class="stat-number">
+        {{ getCompletedCount() }}
+      </div>
 
-  getTodoCount(): number {
+      <div class="stat-label">
+        Completed
+      </div>
 
-    return this.issues.filter(
-      issue => issue.status === 'OPEN'
-    ).length;
-  }
+    </div>
 
+  </div>
 
-  getDevelopmentCount(): number {
 
-    return this.issues.filter(
-      issue => issue.status === 'IN_PROGRESS'
-    ).length;
-  }
+  <!-- ===================================================== -->
+  <!-- LOADING -->
+  <!-- ===================================================== -->
 
+  <div
+    class="loading"
+    *ngIf="loading">
 
-  getTestingCount(): number {
+    Loading assigned issues...
 
-    return this.issues.filter(
-      issue => issue.status === 'TESTING'
-    ).length;
-  }
+  </div>
 
 
-  getCompletedCount(): number {
+  <!-- ===================================================== -->
+  <!-- NO ISSUES -->
+  <!-- ===================================================== -->
 
-    return this.issues.filter(
-      issue => issue.status === 'CLOSED'
-    ).length;
-  }
+  <div
+    class="empty-message"
+    *ngIf="
+      !loading &&
+      filteredIssues.length === 0 &&
+      !errorMessage
+    ">
 
+    No assigned issues found.
 
-  // =========================================================
-  // OPEN ISSUE DETAILS
-  // =========================================================
+  </div>
 
-  openIssue(issue: Issue): void {
 
-    if (issue.id === undefined) {
+  <!-- ===================================================== -->
+  <!-- KANBAN BOARD -->
+  <!-- ===================================================== -->
 
-      alert('Issue ID is missing.');
+  <div
+    class="kanban"
+    *ngIf="
+      !loading &&
+      filteredIssues.length > 0
+    ">
 
-      return;
-    }
 
-    this.router.navigate([
-      '/assignee-issue',
-      issue.id
-    ]);
-  }
+    <!-- ================================================= -->
+    <!-- TO-DO -->
+    <!-- ================================================= -->
 
+    <div class="column">
 
-  // =========================================================
-  // STATUS CLASS
-  // =========================================================
+      <div class="column-header todo-header">
 
-  getStatusClass(status: string): string {
+        <h2>
+          TO-DO
+        </h2>
 
-    if (status === 'OPEN') {
-      return 'todo';
-    }
+        <span>
+          {{ getTodoIssues().length }}
+        </span>
 
-    if (status === 'IN_PROGRESS') {
-      return 'development';
-    }
+      </div>
 
-    if (status === 'TESTING') {
-      return 'testing';
-    }
 
-    if (status === 'CLOSED') {
-      return 'completed';
-    }
+      <div
+        class="issue-card"
+        *ngFor="let issue of getTodoIssues()"
+        (click)="openIssue(issue)">
 
-    return '';
-  }
+        <h3 class="issue-title">
 
+          {{ issue.summary }}
 
-  // =========================================================
-  // PRIORITY CLASS
-  // =========================================================
+        </h3>
 
-  getPriorityClass(priority: string): string {
 
-    if (priority === 'HIGH') {
-      return 'high';
-    }
+        <p class="issue-description">
 
-    if (priority === 'MEDIUM') {
-      return 'medium';
-    }
+          {{ issue.description }}
 
-    if (priority === 'LOW') {
-      return 'low';
-    }
+        </p>
 
-    return '';
-  }
 
+        <div class="issue-info">
 
-  // =========================================================
-  // LOGOUT
-  // =========================================================
+          <span>
 
-  logout(): void {
+            <strong>Priority:</strong>
 
-    this.router.navigate([
-      '/login'
-    ]);
-  }
-}
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- DEVELOPMENT -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header development-header">
+
+        <h2>
+          Development
+        </h2>
+
+        <span>
+          {{ getDevelopmentIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getDevelopmentIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TESTING -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header testing-header">
+
+        <h2>
+          Testing
+        </h2>
+
+        <span>
+          {{ getTestingIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getTestingIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- COMPLETED -->
+    <!-- ================================================= -->
+
+    <div class="column">
+
+      <div class="column-header completed-header">
+
+        <h2>
+          Completed
+        </h2>
+
+        <span>
+          {{ getCompletedIssues().length }}
+        </span>
+
+      </div>
+
+
+      <div
+        class="issue-card"
+        *ngFor="let issue of getCompletedIssues()"
+        (click)="openIssue(issue)">
+
+        <h3 class="issue-title">
+
+          {{ issue.summary }}
+
+        </h3>
+
+
+        <p class="issue-description">
+
+          {{ issue.description }}
+
+        </p>
+
+
+        <div class="issue-info">
+
+          <span>
+
+            <strong>Priority:</strong>
+
+            <span
+              [ngClass]="
+                getPriorityClass(issue.priority)
+              ">
+
+              {{ issue.priority }}
+
+            </span>
+
+          </span>
+
+
+          <span>
+
+            <strong>Type:</strong>
+
+            {{ issue.type }}
+
+          </span>
+
+
+          <span>
+
+            <strong>Story:</strong>
+
+            {{ issue.storyPoint }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
