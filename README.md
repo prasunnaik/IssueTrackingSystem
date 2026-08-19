@@ -11,10 +11,10 @@ ngOnInit(): void {
 
   const user = JSON.parse(storedUser);
 
-  this.ownerId = Number(user.id);
-  this.ownerName = user.name || 'Project Owner';
+  this.assigneeId = Number(user.id);
+  this.assigneeName = user.name || 'Assignee';
 
-  if (!this.ownerId) {
+  if (!this.assigneeId) {
 
     this.errorMessage =
       'Logged-in user information is missing.';
@@ -22,5 +22,5 @@ ngOnInit(): void {
     return;
   }
 
-  this.loadProjects();
+  this.loadIssues();
 }
