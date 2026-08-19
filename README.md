@@ -1,855 +1,1098 @@
-<div class="app-layout">
+/* =========================================================
+   GLOBAL LAYOUT
+   ========================================================= */
 
-  <!-- =========================================================
-       LEFT SIDEBAR
-       ========================================================= -->
+* {
+  box-sizing: border-box;
+}
 
-  <aside class="sidebar">
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #f4f5f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #333;
+}
 
-    <!-- PROFILE -->
 
-    <div class="sidebar-profile">
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
 
-      <div class="profile-image-wrapper">
+.sidebar {
+  width: 210px;
+  min-height: 100vh;
 
-        <img
-          *ngIf="profileImage"
-          [src]="profileImage"
-          [alt]="assigneeName"
-          class="profile-image"
-        />
+  background: #20252b;
+  color: white;
 
-        <div
-          *ngIf="!profileImage"
-          class="profile-fallback">
+  display: flex;
+  flex-direction: column;
 
-          {{ assigneeName.charAt(0).toUpperCase() }}
+  position: sticky;
+  top: 0;
 
-        </div>
+  flex-shrink: 0;
+}
 
-      </div>
 
+/* =========================================================
+   SIDEBAR PROFILE
+   ========================================================= */
 
-      <h3>
-        {{ assigneeName }}
-      </h3>
+.sidebar-profile {
+  padding: 25px 15px 20px;
+  text-align: center;
 
-      <p class="profile-email">
-        {{ assigneeEmail }}
-      </p>
+  border-bottom: 1px solid #343a40;
+}
 
-    </div>
 
+.profile-image-wrapper {
+  width: 72px;
+  height: 72px;
 
-    <!-- ISSUE COUNT -->
+  margin: 0 auto 12px;
 
-    <div class="sidebar-stats">
+  border-radius: 50%;
 
-      <div class="sidebar-stat-number">
-        {{ getTotalIssues() }}
-      </div>
+  overflow: hidden;
 
-      <div class="sidebar-stat-label">
-        Issues Assigned
-      </div>
+  border: 3px solid #ffffff;
 
-    </div>
+  background: #ffc107;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    <!-- NAVIGATION -->
 
-    <nav class="sidebar-navigation">
+.profile-image {
+  width: 100%;
+  height: 100%;
 
-      <button
-        type="button"
-        class="nav-item active"
-        (click)="goToDashboard()">
+  object-fit: cover;
+}
 
-        <span class="nav-icon">▣</span>
 
-        <span>
-          Issue Dashboard
-        </span>
+.profile-fallback {
+  width: 100%;
+  height: 100%;
 
-      </button>
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    </nav>
+  background: #ffc107;
+  color: #20252b;
 
+  font-size: 28px;
+  font-weight: bold;
+}
 
-    <!-- LOGOUT -->
 
-    <div class="sidebar-bottom">
+.sidebar-profile h3 {
+  margin: 5px 0;
 
-      <button
-        type="button"
-        class="logout-button"
-        (click)="logout()">
+  font-size: 15px;
+  color: #ffffff;
+}
 
-        <span class="nav-icon">↪</span>
 
-        Logout
+.profile-email {
+  margin: 0;
 
-      </button>
+  font-size: 11px;
 
-    </div>
+  color: #ffc107;
 
-  </aside>
+  word-break: break-word;
+}
 
 
-  <!-- =========================================================
-       MAIN CONTENT
-       ========================================================= -->
+/* =========================================================
+   SIDEBAR STATISTICS
+   ========================================================= */
 
-  <main class="main-content">
+.sidebar-stats {
+  text-align: center;
 
+  padding: 18px 10px;
 
-    <!-- =======================================================
-         APPLICATION HEADER
-         ======================================================= -->
+  border-bottom: 1px solid #343a40;
+}
 
-    <header class="top-header">
 
-      <!-- SEARCH -->
+.sidebar-stat-number {
+  font-size: 24px;
 
-      <div class="search-container">
+  font-weight: bold;
 
-        <input
-          type="text"
-          [(ngModel)]="searchText"
-          placeholder="Search issue by summary or description"
-          class="search-input"
-        />
+  color: white;
+}
 
-        <button
-          type="button"
-          class="search-button">
 
-          🔍
+.sidebar-stat-label {
+  margin-top: 5px;
 
-        </button>
+  font-size: 11px;
 
-      </div>
+  color: #bbbbbb;
+}
 
 
-      <!-- APPLICATION NAME -->
+/* =========================================================
+   SIDEBAR NAVIGATION
+   ========================================================= */
 
-      <div class="application-name">
+.sidebar-navigation {
+  padding: 15px 10px;
+}
 
-        Issue Tracking System
 
-      </div>
+.nav-item {
+  width: 100%;
 
-    </header>
+  display: flex;
+  align-items: center;
 
+  gap: 9px;
 
-    <!-- =======================================================
-         PAGE CONTENT
-         ======================================================= -->
+  padding: 11px 8px;
 
-    <section class="content-area">
+  border: none;
 
+  background: transparent;
 
-      <!-- PAGE TITLE -->
+  color: #ffc107;
 
-      <div class="page-header">
+  text-align: left;
 
-        <div>
+  font-size: 12px;
 
-          <h1>
-            Assignee Dashboard
-          </h1>
+  cursor: pointer;
 
-          <p>
-            View and manage your assigned issues
-          </p>
+  border-radius: 4px;
+}
 
-        </div>
 
+.nav-item:hover,
+.nav-item.active {
+  background: #2b3036;
+}
 
-        <button
-          type="button"
-          class="refresh-button"
-          (click)="refreshDashboard()">
 
-          ↻ Refresh
+.nav-icon {
+  width: 18px;
 
-        </button>
+  display: inline-flex;
 
-      </div>
+  justify-content: center;
 
+  font-size: 14px;
+}
 
-      <!-- =====================================================
-           ERROR
-           ===================================================== -->
 
-      <div
-        class="error-message"
-        *ngIf="errorMessage">
+/* =========================================================
+   SIDEBAR BOTTOM
+   ========================================================= */
 
-        {{ errorMessage }}
+.sidebar-bottom {
+  margin-top: auto;
 
-      </div>
+  padding: 15px 12px 25px;
+}
 
 
-      <!-- =====================================================
-           SUCCESS
-           ===================================================== -->
+.logout-button {
+  width: 100%;
 
-      <div
-        class="success-message"
-        *ngIf="successMessage">
+  padding: 8px 10px;
 
-        {{ successMessage }}
+  border: 1px solid #ffc107;
 
-      </div>
+  border-radius: 4px;
 
+  background: transparent;
 
-      <!-- =====================================================
-           SUMMARY CARDS
-           ===================================================== -->
+  color: #ffc107;
 
-      <div class="summary-cards">
+  cursor: pointer;
 
-        <div class="summary-card">
+  font-size: 11px;
+}
 
-          <div class="summary-number">
-            {{ getTotalIssues() }}
-          </div>
 
-          <div class="summary-label">
-            Total Assigned
-          </div>
+.logout-button:hover {
+  background: #ffc107;
+  color: #20252b;
+}
 
-        </div>
 
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
 
-        <div class="summary-card todo-summary">
+.main-content {
+  flex: 1;
 
-          <div class="summary-number">
-            {{ getTodoCount() }}
-          </div>
+  min-width: 0;
 
-          <div class="summary-label">
-            To Do
-          </div>
+  background: #f4f5f7;
+}
 
-        </div>
 
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
 
-        <div class="summary-card development-summary">
+.top-header {
+  height: 55px;
 
-          <div class="summary-number">
-            {{ getDevelopmentCount() }}
-          </div>
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-          <div class="summary-label">
-            Development
-          </div>
+  gap: 20px;
 
-        </div>
+  padding: 0 20px;
 
+  background: #ffc107;
 
-        <div class="summary-card testing-summary">
+  border-bottom: 1px solid #e0a800;
+}
 
-          <div class="summary-number">
-            {{ getTestingCount() }}
-          </div>
 
-          <div class="summary-label">
-            Testing
-          </div>
+/* =========================================================
+   SEARCH
+   ========================================================= */
 
-        </div>
+.search-container {
+  display: flex;
 
+  width: 55%;
+  max-width: 600px;
+}
 
-        <div class="summary-card completed-summary">
 
-          <div class="summary-number">
-            {{ getCompletedCount() }}
-          </div>
+.search-input {
+  width: 100%;
 
-          <div class="summary-label">
-            Completed
-          </div>
+  height: 32px;
 
-        </div>
+  padding: 7px 10px;
 
-      </div>
+  border: 1px solid #dddddd;
 
+  border-right: none;
 
-      <!-- =====================================================
-           LOADING
-           ===================================================== -->
+  border-radius: 4px 0 0 4px;
 
-      <div
-        class="loading"
-        *ngIf="loading">
+  outline: none;
 
-        Loading assigned issues...
+  font-size: 12px;
 
-      </div>
+  background: white;
+}
 
 
-      <!-- =====================================================
-           NO ISSUES
-           ===================================================== -->
+.search-input:focus {
+  border-color: #999;
+}
 
-      <div
-        class="empty-message"
-        *ngIf="
-          !loading &&
-          filteredIssues.length === 0 &&
-          !errorMessage
-        ">
 
-        <div class="empty-title">
-          No Issues Assigned
-        </div>
+.search-button {
+  width: 38px;
 
-        <p>
-          There are currently no issues assigned to you.
-        </p>
+  height: 32px;
 
-      </div>
+  border: 1px solid #dddddd;
 
+  border-radius: 0 4px 4px 0;
 
-      <!-- =====================================================
-           KANBAN BOARD
-           ===================================================== -->
+  background: #eeeeee;
 
-      <div
-        class="kanban"
-        *ngIf="
-          !loading &&
-          filteredIssues.length > 0
-        ">
+  cursor: pointer;
+}
 
 
-        <!-- ===================================================
-             TO DO
-             =================================================== -->
+.search-button:hover {
+  background: #e0e0e0;
+}
 
-        <div class="kanban-column">
 
-          <div class="column-header todo-header">
+/* =========================================================
+   APPLICATION NAME
+   ========================================================= */
 
-            <div class="column-title">
+.application-name {
+  font-size: 13px;
 
-              <span class="column-icon">
-                ☰
-              </span>
+  font-weight: bold;
 
-              <span>
-                TO DO
-              </span>
+  color: #333;
 
-            </div>
+  white-space: nowrap;
+}
 
-            <span class="column-count">
-              {{ getTodoIssues().length }}
-            </span>
 
-          </div>
+/* =========================================================
+   CONTENT AREA
+   ========================================================= */
 
+.content-area {
+  padding: 25px 30px 40px;
+}
 
-          <div class="column-content">
 
-            <div
-              class="issue-card"
-              *ngFor="let issue of getTodoIssues()"
-              (click)="openIssue(issue)">
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
 
+.page-header {
+  display: flex;
 
-              <!-- ISSUE ID -->
+  justify-content: space-between;
+  align-items: center;
 
-              <div class="issue-card-top">
+  gap: 20px;
 
-                <span class="issue-id">
-                  Id: {{ issue.id }}
-                </span>
+  margin-bottom: 25px;
+}
 
-                <span class="issue-date">
-                  {{ issue.createdDate || '' }}
-                </span>
 
-              </div>
+.page-header h1 {
+  margin: 0;
 
+  font-size: 22px;
 
-              <!-- TITLE -->
+  color: #222;
+}
 
-              <h3 class="issue-title">
 
-                {{ issue.summary }}
+.page-header p {
+  margin: 6px 0 0;
 
-              </h3>
+  font-size: 13px;
 
+  color: #777;
+}
 
-              <!-- DESCRIPTION -->
 
-              <p class="issue-description">
+/* =========================================================
+   REFRESH
+   ========================================================= */
 
-                {{ issue.description }}
+.refresh-button {
+  padding: 9px 15px;
 
-              </p>
+  border: none;
 
+  border-radius: 4px;
 
-              <!-- ISSUE FOOTER -->
+  background: #1976d2;
 
-              <div class="issue-footer">
+  color: white;
 
-                <div class="issue-assignee">
+  font-size: 12px;
 
-                  <div class="mini-avatar">
+  cursor: pointer;
+}
 
-                    <img
-                      *ngIf="profileImage"
-                      [src]="profileImage"
-                      [alt]="assigneeName"
-                    />
 
-                    <span *ngIf="!profileImage">
-                      {{ assigneeName.charAt(0).toUpperCase() }}
-                    </span>
+.refresh-button:hover {
+  background: #125ea8;
+}
 
-                  </div>
 
-                  <span>
-                    {{ assigneeName }}
-                  </span>
+/* =========================================================
+   MESSAGES
+   ========================================================= */
 
-                </div>
+.error-message {
+  padding: 12px 15px;
 
+  margin-bottom: 20px;
 
-                <span
-                  class="priority-badge"
-                  [ngClass]="getPriorityClass(issue.priority)">
+  background: #ffebee;
 
-                  {{ issue.priority }}
+  color: #c62828;
 
-                </span>
+  border: 1px solid #ffcdd2;
 
-              </div>
+  border-radius: 5px;
 
+  font-size: 13px;
+}
 
-              <!-- STORY POINT -->
 
-              <div class="issue-bottom-info">
+.success-message {
+  padding: 12px 15px;
 
-                <span>
-                  <strong>Type:</strong>
-                  {{ issue.type }}
-                </span>
+  margin-bottom: 20px;
 
-                <span>
-                  <strong>Story:</strong>
-                  {{ issue.storyPoint }}
-                </span>
+  background: #e8f5e9;
 
-              </div>
+  color: #2e7d32;
 
-            </div>
+  border: 1px solid #c8e6c9;
 
+  border-radius: 5px;
 
-            <div
-              class="column-empty"
-              *ngIf="getTodoIssues().length === 0">
+  font-size: 13px;
+}
 
-              No issues
 
-            </div>
+/* =========================================================
+   SUMMARY CARDS
+   ========================================================= */
 
-          </div>
+.summary-cards {
+  display: grid;
 
-        </div>
+  grid-template-columns: repeat(5, 1fr);
 
+  gap: 12px;
 
-        <!-- ===================================================
-             DEVELOPMENT
-             =================================================== -->
+  margin-bottom: 25px;
+}
 
-        <div class="kanban-column">
 
-          <div class="column-header development-header">
+.summary-card {
+  background: white;
 
-            <div class="column-title">
+  border: 1px solid #e2e2e2;
 
-              <span class="column-icon">
-                ⚙
-              </span>
+  border-radius: 5px;
 
-              <span>
-                DEVELOPMENT
-              </span>
+  padding: 15px;
 
-            </div>
+  text-align: center;
+}
 
-            <span class="column-count">
-              {{ getDevelopmentIssues().length }}
-            </span>
 
-          </div>
+.summary-number {
+  font-size: 23px;
 
+  font-weight: bold;
 
-          <div class="column-content">
+  color: #333;
+}
 
-            <div
-              class="issue-card"
-              *ngFor="let issue of getDevelopmentIssues()"
-              (click)="openIssue(issue)">
 
+.summary-label {
+  margin-top: 5px;
 
-              <div class="issue-card-top">
+  font-size: 11px;
 
-                <span class="issue-id">
-                  Id: {{ issue.id }}
-                </span>
+  color: #777;
+}
 
-                <span class="issue-date">
-                  {{ issue.createdDate || '' }}
-                </span>
 
-              </div>
+/* Summary accents */
 
+.todo-summary {
+  border-top: 3px solid #d32f2f;
+}
 
-              <h3 class="issue-title">
 
-                {{ issue.summary }}
+.development-summary {
+  border-top: 3px solid #ef6c00;
+}
 
-              </h3>
 
+.testing-summary {
+  border-top: 3px solid #1976d2;
+}
 
-              <p class="issue-description">
 
-                {{ issue.description }}
+.completed-summary {
+  border-top: 3px solid #2e7d32;
+}
 
-              </p>
 
+/* =========================================================
+   LOADING / EMPTY
+   ========================================================= */
 
-              <div class="issue-footer">
+.loading,
+.empty-message {
+  padding: 45px 20px;
 
-                <div class="issue-assignee">
+  text-align: center;
 
-                  <div class="mini-avatar">
+  background: white;
 
-                    <img
-                      *ngIf="profileImage"
-                      [src]="profileImage"
-                      [alt]="assigneeName"
-                    />
+  border: 1px solid #e0e0e0;
 
-                    <span *ngIf="!profileImage">
-                      {{ assigneeName.charAt(0).toUpperCase() }}
-                    </span>
+  border-radius: 6px;
 
-                  </div>
+  color: #777;
+}
 
-                  <span>
-                    {{ assigneeName }}
-                  </span>
 
-                </div>
+.empty-title {
+  font-size: 18px;
 
+  font-weight: bold;
 
-                <span
-                  class="priority-badge"
-                  [ngClass]="getPriorityClass(issue.priority)">
+  color: #555;
 
-                  {{ issue.priority }}
+  margin-bottom: 7px;
+}
 
-                </span>
 
-              </div>
+.empty-message p {
+  margin: 0;
 
+  font-size: 13px;
+}
 
-              <div class="issue-bottom-info">
 
-                <span>
-                  <strong>Type:</strong>
-                  {{ issue.type }}
-                </span>
+/* =========================================================
+   KANBAN BOARD
+   ========================================================= */
 
-                <span>
-                  <strong>Story:</strong>
-                  {{ issue.storyPoint }}
-                </span>
+.kanban {
+  display: grid;
 
-              </div>
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
-            </div>
+  gap: 12px;
 
+  align-items: start;
+}
 
-            <div
-              class="column-empty"
-              *ngIf="getDevelopmentIssues().length === 0">
 
-              No issues
+.kanban-column {
+  min-width: 0;
 
-            </div>
+  background: #eeeeee;
 
-          </div>
+  border-radius: 3px;
 
-        </div>
+  padding-bottom: 10px;
+}
 
 
-        <!-- ===================================================
-             TESTING
-             =================================================== -->
+/* =========================================================
+   COLUMN HEADER
+   ========================================================= */
 
-        <div class="kanban-column">
+.column-header {
+  min-height: 42px;
 
-          <div class="column-header testing-header">
+  display: flex;
 
-            <div class="column-title">
+  align-items: center;
 
-              <span class="column-icon">
-                ✓
-              </span>
+  justify-content: space-between;
 
-              <span>
-                TESTING
-              </span>
+  padding: 8px 10px;
 
-            </div>
+  background: #f7f7f7;
 
-            <span class="column-count">
-              {{ getTestingIssues().length }}
-            </span>
+  border-top: 3px solid;
 
-          </div>
+  border-bottom: 1px solid #dddddd;
+}
 
 
-          <div class="column-content">
+.column-title {
+  display: flex;
 
-            <div
-              class="issue-card"
-              *ngFor="let issue of getTestingIssues()"
-              (click)="openIssue(issue)">
+  align-items: center;
 
+  gap: 6px;
 
-              <div class="issue-card-top">
+  font-size: 11px;
 
-                <span class="issue-id">
-                  Id: {{ issue.id }}
-                </span>
+  font-weight: bold;
 
-                <span class="issue-date">
-                  {{ issue.createdDate || '' }}
-                </span>
+  color: #555;
+}
 
-              </div>
 
+.column-icon {
+  font-size: 11px;
+}
 
-              <h3 class="issue-title">
 
-                {{ issue.summary }}
+.column-count {
+  min-width: 20px;
 
-              </h3>
+  height: 20px;
 
+  display: flex;
 
-              <p class="issue-description">
+  align-items: center;
+  justify-content: center;
 
-                {{ issue.description }}
+  padding: 0 6px;
 
-              </p>
+  border-radius: 50%;
 
+  background: #dddddd;
 
-              <div class="issue-footer">
+  font-size: 10px;
 
-                <div class="issue-assignee">
+  font-weight: bold;
+}
 
-                  <div class="mini-avatar">
 
-                    <img
-                      *ngIf="profileImage"
-                      [src]="profileImage"
-                      [alt]="assigneeName"
-                    />
+/* Column colors */
 
-                    <span *ngIf="!profileImage">
-                      {{ assigneeName.charAt(0).toUpperCase() }}
-                    </span>
+.todo-header {
+  border-top-color: #d32f2f;
+}
 
-                  </div>
 
-                  <span>
-                    {{ assigneeName }}
-                  </span>
+.development-header {
+  border-top-color: #ef6c00;
+}
 
-                </div>
 
+.testing-header {
+  border-top-color: #1976d2;
+}
 
-                <span
-                  class="priority-badge"
-                  [ngClass]="getPriorityClass(issue.priority)">
 
-                  {{ issue.priority }}
+.completed-header {
+  border-top-color: #2e7d32;
+}
 
-                </span>
 
-              </div>
+/* =========================================================
+   COLUMN CONTENT
+   ========================================================= */
 
+.column-content {
+  padding: 8px;
+}
 
-              <div class="issue-bottom-info">
 
-                <span>
-                  <strong>Type:</strong>
-                  {{ issue.type }}
-                </span>
+/* =========================================================
+   ISSUE CARD
+   ========================================================= */
 
-                <span>
-                  <strong>Story:</strong>
-                  {{ issue.storyPoint }}
-                </span>
+.issue-card {
+  padding: 12px;
 
-              </div>
+  margin-bottom: 9px;
 
-            </div>
+  background: white;
 
+  border: 1px solid #dddddd;
 
-            <div
-              class="column-empty"
-              *ngIf="getTestingIssues().length === 0">
+  border-radius: 4px;
 
-              No issues
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
-            </div>
+  cursor: pointer;
 
-          </div>
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
 
-        </div>
 
+.issue-card:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.13);
 
-        <!-- ===================================================
-             COMPLETED
-             =================================================== -->
+  transform: translateY(-1px);
+}
 
-        <div class="kanban-column">
 
-          <div class="column-header completed-header">
+/* =========================================================
+   ISSUE TOP
+   ========================================================= */
 
-            <div class="column-title">
+.issue-card-top {
+  display: flex;
 
-              <span class="column-icon">
-                ✓
-              </span>
+  justify-content: space-between;
 
-              <span>
-                COMPLETED
-              </span>
+  gap: 5px;
 
-            </div>
+  margin-bottom: 8px;
+}
 
-            <span class="column-count">
-              {{ getCompletedIssues().length }}
-            </span>
 
-          </div>
+.issue-id {
+  font-size: 10px;
 
+  color: #666;
 
-          <div class="column-content">
+  font-weight: bold;
+}
 
-            <div
-              class="issue-card"
-              *ngFor="let issue of getCompletedIssues()"
-              (click)="openIssue(issue)">
 
+.issue-date {
+  font-size: 9px;
 
-              <div class="issue-card-top">
+  color: #999;
+}
 
-                <span class="issue-id">
-                  Id: {{ issue.id }}
-                </span>
 
-                <span class="issue-date">
-                  {{ issue.createdDate || '' }}
-                </span>
+/* =========================================================
+   ISSUE TITLE
+   ========================================================= */
 
-              </div>
+.issue-title {
+  margin: 0 0 7px;
 
+  font-size: 13px;
 
-              <h3 class="issue-title">
+  line-height: 1.35;
 
-                {{ issue.summary }}
+  color: #333;
+}
 
-              </h3>
 
+.issue-card:hover .issue-title {
+  color: #1976d2;
+}
 
-              <p class="issue-description">
 
-                {{ issue.description }}
+/* =========================================================
+   ISSUE DESCRIPTION
+   ========================================================= */
 
-              </p>
+.issue-description {
+  margin: 0;
 
+  color: #777;
 
-              <div class="issue-footer">
+  font-size: 10px;
 
-                <div class="issue-assignee">
+  line-height: 1.45;
 
-                  <div class="mini-avatar">
+  display: -webkit-box;
 
-                    <img
-                      *ngIf="profileImage"
-                      [src]="profileImage"
-                      [alt]="assigneeName"
-                    />
+  -webkit-line-clamp: 3;
 
-                    <span *ngIf="!profileImage">
-                      {{ assigneeName.charAt(0).toUpperCase() }}
-                    </span>
+  -webkit-box-orient: vertical;
 
-                  </div>
+  overflow: hidden;
+}
 
-                  <span>
-                    {{ assigneeName }}
-                  </span>
 
-                </div>
+/* =========================================================
+   ISSUE FOOTER
+   ========================================================= */
 
+.issue-footer {
+  display: flex;
 
-                <span
-                  class="priority-badge"
-                  [ngClass]="getPriorityClass(issue.priority)">
+  justify-content: space-between;
 
-                  {{ issue.priority }}
+  align-items: center;
 
-                </span>
+  gap: 8px;
 
-              </div>
+  margin-top: 12px;
 
+  padding-top: 9px;
 
-              <div class="issue-bottom-info">
+  border-top: 1px solid #eeeeee;
+}
 
-                <span>
-                  <strong>Type:</strong>
-                  {{ issue.type }}
-                </span>
 
-                <span>
-                  <strong>Story:</strong>
-                  {{ issue.storyPoint }}
-                </span>
+.issue-assignee {
+  display: flex;
 
-              </div>
+  align-items: center;
 
-            </div>
+  gap: 5px;
 
+  min-width: 0;
 
-            <div
-              class="column-empty"
-              *ngIf="getCompletedIssues().length === 0">
+  font-size: 9px;
 
-              No issues
+  color: #666;
+}
 
-            </div>
 
-          </div>
+.issue-assignee > span {
+  overflow: hidden;
 
-        </div>
+  text-overflow: ellipsis;
 
-      </div>
+  white-space: nowrap;
+}
 
-    </section>
 
-  </main>
+/* =========================================================
+   MINI AVATAR
+   ========================================================= */
 
-</div>
+.mini-avatar {
+  width: 23px;
+  height: 23px;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background: #ffc107;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 10px;
+
+  font-weight: bold;
+
+  color: #333;
+}
+
+
+.mini-avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* =========================================================
+   PRIORITY
+   ========================================================= */
+
+.priority-badge {
+  padding: 3px 6px;
+
+  border-radius: 3px;
+
+  font-size: 8px;
+
+  font-weight: bold;
+
+  white-space: nowrap;
+}
+
+
+.priority-badge.high {
+  background: #ffebee;
+
+  color: #d32f2f;
+}
+
+
+.priority-badge.medium {
+  background: #fff3e0;
+
+  color: #ef6c00;
+}
+
+
+.priority-badge.low {
+  background: #e8f5e9;
+
+  color: #2e7d32;
+}
+
+
+/* =========================================================
+   ISSUE BOTTOM
+   ========================================================= */
+
+.issue-bottom-info {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-top: 8px;
+
+  font-size: 9px;
+
+  color: #777;
+}
+
+
+.issue-bottom-info strong {
+  color: #555;
+}
+
+
+/* =========================================================
+   EMPTY COLUMN
+   ========================================================= */
+
+.column-empty {
+  padding: 20px 10px;
+
+  text-align: center;
+
+  font-size: 10px;
+
+  color: #999;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .sidebar {
+    width: 180px;
+  }
+
+  .content-area {
+    padding: 20px;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .kanban {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 750px) {
+
+  .app-layout {
+    flex-direction: column;
+  }
+
+
+  .sidebar {
+    width: 100%;
+
+    min-height: auto;
+
+    position: relative;
+  }
+
+
+  .sidebar-profile {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    text-align: left;
+
+    padding: 12px 15px;
+  }
+
+
+  .profile-image-wrapper {
+    width: 50px;
+    height: 50px;
+
+    margin: 0;
+  }
+
+
+  .profile-email {
+    font-size: 10px;
+  }
+
+
+  .sidebar-stats {
+    display: none;
+  }
+
+
+  .sidebar-navigation {
+    display: none;
+  }
+
+
+  .sidebar-bottom {
+    position: absolute;
+
+    right: 10px;
+    top: 12px;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+
+  .logout-button {
+    width: auto;
+
+    padding: 7px 12px;
+  }
+
+
+  .top-header {
+    height: auto;
+
+    padding: 10px 15px;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 8px;
+  }
+
+
+  .search-container {
+    width: 100%;
+
+    max-width: none;
+  }
+
+
+  .application-name {
+    text-align: right;
+
+    font-size: 11px;
+  }
+
+
+  .content-area {
+    padding: 18px 15px;
+  }
+
+
+  .page-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+
+  .kanban {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 450px) {
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+}
