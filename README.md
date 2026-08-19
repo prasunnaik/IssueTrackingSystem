@@ -1,199 +1,312 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+<div class="page">
 
-import { IssueService } from '../../services/issue.service';
-import { Issue } from '../../models/issue';
+  <!-- HEADER -->
 
-@Component({
-  selector: 'app-assignee-issue-details',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
-  templateUrl: './assignee-issue-details.component.html',
-  styleUrl: './assignee-issue-details.component.css'
-})
-export class AssigneeIssueDetailsComponent implements OnInit {
+  <div class="header">
 
-  issue: Issue | null = null;
+    <div>
+      <h1>Issue Details</h1>
 
-  selectedStatus: string = '';
+      <p>
+        View and update the assigned issue
+      </p>
+    </div>
 
-  originalStatus: string = '';
+    <button
+      type="button"
+      class="back-button"
+      (click)="goBack()">
 
-  loading: boolean = true;
+      Back to Dashboard
 
-  saving: boolean = false;
+    </button>
 
-  errorMessage: string = '';
+  </div>
 
-  successMessage: string = '';
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private issueService: IssueService
-  ) {}
+  <!-- LOADING -->
 
-  ngOnInit(): void {
+  <div
+    class="loading"
+    *ngIf="loading">
 
-    const issueId = Number(
-      this.route.snapshot.paramMap.get('id')
-    );
+    Loading issue details...
 
-    if (!issueId) {
-      this.errorMessage = 'Invalid issue ID.';
-      this.loading = false;
-      return;
-    }
+  </div>
 
-    this.loadIssue(issueId);
-  }
 
-  loadIssue(issueId: number): void {
+  <!-- ERROR -->
 
-    this.loading = true;
-    this.errorMessage = '';
+  <div
+    class="error-message"
+    *ngIf="errorMessage">
 
-    this.issueService
-      .getIssueById(issueId)
-      .subscribe({
+    {{ errorMessage }}
 
-        next: (data: Issue) => {
+  </div>
 
-          this.issue = data;
 
-          this.selectedStatus = data.status;
+  <!-- SUCCESS -->
 
-          this.originalStatus = data.status;
+  <div
+    class="success-message"
+    *ngIf="successMessage">
 
-          this.loading = false;
-        },
+    {{ successMessage }}
 
-        error: (error: any) => {
+  </div>
 
-          console.error(
-            'Failed to load issue:',
-            error
-          );
 
-          this.errorMessage =
-            'Failed to load issue details.';
+  <!-- ISSUE DETAILS -->
 
-          this.loading = false;
-        }
-      });
-  }
+  <div
+    class="issue-container"
+    *ngIf="issue && !loading">
 
-  onStatusChange(): void {
 
-    this.successMessage = '';
-    this.errorMessage = '';
-  }
+    <!-- TITLE -->
 
-  hasStatusChanged(): boolean {
+    <div class="issue-header">
 
-    return this.selectedStatus !== this.originalStatus;
-  }
+      <div>
 
-  saveUpdates(): void {
+        <div class="breadcrumb">
+          Assignee Dashboard / Issue Details
+        </div>
 
-    if (!this.issue || this.issue.id === undefined) {
-      this.errorMessage = 'Issue information is missing.';
-      return;
-    }
+        <h2>
+          {{ issue.summary }}
+        </h2>
 
-    if (!this.hasStatusChanged()) {
-      return;
-    }
+      </div>
 
-    this.saving = true;
+      <span
+        class="status-badge"
+        [ngClass]="
+          getStatusClass(issue.status)
+        ">
 
-    this.errorMessage = '';
-    this.successMessage = '';
+        {{ issue.status }}
 
-    this.issueService
-      .updateIssueStatus(
-        this.issue.id,
-        this.selectedStatus
-      )
-      .subscribe({
+      </span>
 
-        next: (updatedIssue: Issue) => {
+    </div>
 
-          this.issue = updatedIssue;
 
-          this.selectedStatus =
-            updatedIssue.status;
+    <!-- DESCRIPTION -->
 
-          this.originalStatus =
-            updatedIssue.status;
+    <div class="description-section">
 
-          this.saving = false;
+      <h3>Description</h3>
 
-          this.successMessage =
-            'Issue status updated successfully.';
-        },
+      <p>
+        {{ issue.description }}
+      </p>
 
-        error: (error: any) => {
+    </div>
 
-          console.error(
-            'Failed to update issue status:',
-            error
-          );
 
-          this.saving = false;
+    <!-- ISSUE INFORMATION -->
 
-          this.errorMessage =
-            'Failed to update issue status.';
+    <div class="details-grid">
 
-          this.selectedStatus =
-            this.originalStatus;
-        }
-      });
-  }
 
-  goBack(): void {
+      <div class="detail-item">
 
-    this.router.navigate([
-      '/assignee-dashboard'
-    ]);
-  }
+        <span class="label">
+          Issue ID
+        </span>
 
-  getStatusClass(status: string): string {
+        <span class="value">
+          {{ issue.id }}
+        </span>
 
-    if (status === 'OPEN') {
-      return 'open';
-    }
+      </div>
 
-    if (status === 'IN_PROGRESS') {
-      return 'progress';
-    }
 
-    if (status === 'CLOSED') {
-      return 'closed';
-    }
+      <div class="detail-item">
 
-    return '';
-  }
+        <span class="label">
+          Type
+        </span>
 
-  getPriorityClass(priority: string): string {
+        <span class="value">
+          {{ issue.type }}
+        </span>
 
-    if (priority === 'HIGH') {
-      return 'high';
-    }
+      </div>
 
-    if (priority === 'MEDIUM') {
-      return 'medium';
-    }
 
-    if (priority === 'LOW') {
-      return 'low';
-    }
+      <div class="detail-item">
 
-    return '';
-  }
-}
+        <span class="label">
+          Priority
+        </span>
+
+        <span
+          class="priority"
+          [ngClass]="
+            getPriorityClass(issue.priority)
+          ">
+
+          {{ issue.priority }}
+
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Assignee ID
+        </span>
+
+        <span class="value">
+          {{ issue.assigneeId }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Project ID
+        </span>
+
+        <span class="value">
+          {{ issue.projectId }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Story Points
+        </span>
+
+        <span class="value">
+          {{ issue.storyPoint }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Sprint
+        </span>
+
+        <span class="value">
+          {{ issue.sprint || '-' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Tags
+        </span>
+
+        <span class="value">
+          {{ issue.tags || '-' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Created Date
+        </span>
+
+        <span class="value">
+          {{ issue.createdDate || '-' }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-item">
+
+        <span class="label">
+          Last Updated
+        </span>
+
+        <span class="value">
+          {{ issue.lastUpdatedDate || '-' }}
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- STATUS UPDATE -->
+
+    <div class="status-update">
+
+      <label for="status">
+        Update Status
+      </label>
+
+      <select
+        id="status"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onStatusChange()">
+
+        <option value="OPEN">
+          OPEN
+        </option>
+
+        <option value="IN_PROGRESS">
+          IN_PROGRESS
+        </option>
+
+        <option value="CLOSED">
+          CLOSED
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="actions">
+
+      <button
+        type="button"
+        class="save-button"
+        [disabled]="
+          !hasStatusChanged() || saving
+        "
+        (click)="saveUpdates()">
+
+        {{ saving ? 'Saving...' : 'Save Updates' }}
+
+      </button>
+
+
+      <button
+        type="button"
+        class="cancel-button"
+        (click)="goBack()">
+
+        Back
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
